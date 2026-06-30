@@ -1,0 +1,84 @@
+name: Desktop Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "GitHub release tag to attach DMGs to (e.g. v1.0.3)"
+        required: true
+        type: string
+
+env:
+  NODE_OPTIONS: "--max-old-space-size=4096"
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    runs-on: macos-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            artifact: velo-macos-silicon.dmg
+          - target: x86_64-apple-darwin
+            artifact: velo-macos-intel.dmg
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+          submodules: recursive
+
+      - uses: ./.github/actions/rust_install
+        with:
+          platform: macos
+
+      - uses: ./.github/actions/pnpm_install
+
+      - name: Build UI
+        run: pnpm -F @hypr/ui build
+
+      - name: Import Apple certificate
+        if: ${{ env.APPLE_CERTIFICATE != '' }}
+        uses: ./.github/actions/apple_cert
+        id: apple-cert
+        with:
+          apple-certificate: ${{ secrets.APPLE_CERTIFICATE }}
+          apple-certificate-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+
+      - name: Build desktop app
+        run: |
+          BUILD_ARGS=(
+            --target "${{ matrix.target }}"
+            --config "src-tauri/tauri.conf.stable.json"
+          )
+          if [[ "${{ matrix.target }}" == "x86_64-apple-darwin" ]]; then
+            BUILD_ARGS+=(--config "src-tauri/tauri.conf.macos-intel.json")
+          fi
+          pnpm -F @hypr/desktop tauri build "${BUILD_ARGS[@]}"
+        env:
+          CI: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notarize DMG
+        if: ${{ steps.apple-cert.outputs.cert-id != '' }}
+        uses: ./.github/actions/macos_notarize_dmg
+        with:
+          dmg-path: apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+          signing-identity: ${{ steps.apple-cert.outputs.cert-id }}
+          apple-id: ${{ secrets.APPLE_ID }}
+          apple-password: ${{ secrets.APPLE_PASSWORD }}
+          apple-team-id: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Rename and upload DMG
+        run: |
+          DMG=$(find apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/ -name "*.dmg" | head -1)
+          cp "$DMG" "${{ matrix.artifact }}"
+          gh release upload "${{ inputs.tag }}" "${{ matrix.artifact }}" --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
