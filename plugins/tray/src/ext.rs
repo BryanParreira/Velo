@@ -133,28 +133,36 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
     }
 
     pub fn set_visible(&self, visible: bool) -> Result<()> {
-        let app = self.manager.app_handle();
+        let app = self.manager.app_handle().clone();
 
         if visible {
-            self.create_tray_menu()?;
-            Self::refresh_icon(app)?;
+            let app2 = app.clone();
+            app.run_on_main_thread(move || {
+                let _ = app2.tray().create_tray_menu();
+            })?;
+            Self::refresh_icon(&app)?;
         } else {
             if let Ok(mut task) = ANIMATION_TASK.lock()
                 && let Some(handle) = task.take()
             {
                 handle.abort();
             }
-            let _ = app.remove_tray_by_id(TRAY_ID);
+            app.run_on_main_thread(move || {
+                let _ = app.remove_tray_by_id(TRAY_ID);
+            })?;
         }
 
         Ok(())
     }
 
     pub fn set_title(&self, title: Option<&str>) -> Result<()> {
-        let app = self.manager.app_handle();
-        if let Some(tray) = app.tray_by_id(TRAY_ID) {
-            tray.set_title(title)?;
-        }
+        let app = self.manager.app_handle().clone();
+        let title = title.map(str::to_string);
+        app.run_on_main_thread(move || {
+            if let Some(tray) = app.tray_by_id(TRAY_ID) {
+                let _ = tray.set_title(title.as_deref());
+            }
+        })?;
         Ok(())
     }
 
@@ -187,21 +195,21 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
                     let mut frame = 0usize;
                     loop {
                         interval.tick().await;
-                        if let Some(tray) = app.tray_by_id(TRAY_ID)
-                            && let Ok(image) = Image::from_bytes(RECORDING_FRAMES[frame])
-                        {
-                            let _ = tray.set_icon(Some(image));
-                        }
+                        let app2 = app.clone();
+                        let frame_data = RECORDING_FRAMES[frame];
+                        let _ = app.run_on_main_thread(move || {
+                            if let Some(tray) = app2.tray_by_id(TRAY_ID)
+                                && let Ok(image) = Image::from_bytes(frame_data)
+                            {
+                                let _ = tray.set_icon(Some(image));
+                            }
+                        });
                         frame = (frame + 1) % RECORDING_FRAMES.len();
                     }
                 }));
                 return Ok(());
             }
         }
-
-        let Some(tray) = app.tray_by_id(TRAY_ID) else {
-            return Ok(());
-        };
 
         let state = if IS_UPDATE_AVAILABLE.load(Ordering::SeqCst) {
             TrayIconState::UpdateAvailable
@@ -211,31 +219,38 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
             TrayIconState::Default
         };
 
-        tray.set_icon(Some(state.to_image()?))?;
+        let image = state.to_image()?;
+        app.run_on_main_thread(move || {
+            if let Some(tray) = app.tray_by_id(TRAY_ID) {
+                let _ = tray.set_icon(Some(image));
+            }
+        })?;
 
         Ok(())
     }
 
     pub fn set_start_disabled(&self, disabled: bool) -> Result<()> {
-        let app = self.manager.app_handle();
-
-        if let Some(tray) = app.tray_by_id(TRAY_ID) {
-            let menu = Menu::with_items(
-                app,
-                &[
-                    &TrayVersion::build(app)?,
-                    &PredefinedMenuItem::separator(app)?,
-                    &TrayOpen::build(app)?,
-                    &TrayStart::build_with_disabled(app, disabled)?,
-                    &PredefinedMenuItem::separator(app)?,
-                    &TrayCheckUpdate::build(app)?,
-                    &PredefinedMenuItem::separator(app)?,
-                    &TrayQuit::build(app)?,
-                ],
-            )?;
-
-            tray.set_menu(Some(menu))?;
-        }
+        let app = self.manager.app_handle().clone();
+        app.run_on_main_thread(move || {
+            if let Some(tray) = app.tray_by_id(TRAY_ID) {
+                let menu = Menu::with_items(
+                    &app,
+                    &[
+                        &TrayVersion::build(&app).unwrap(),
+                        &PredefinedMenuItem::separator(&app).unwrap(),
+                        &TrayOpen::build(&app).unwrap(),
+                        &TrayStart::build_with_disabled(&app, disabled).unwrap(),
+                        &PredefinedMenuItem::separator(&app).unwrap(),
+                        &TrayCheckUpdate::build(&app).unwrap(),
+                        &PredefinedMenuItem::separator(&app).unwrap(),
+                        &TrayQuit::build(&app).unwrap(),
+                    ],
+                );
+                if let Ok(menu) = menu {
+                    let _ = tray.set_menu(Some(menu));
+                }
+            }
+        })?;
 
         Ok(())
     }

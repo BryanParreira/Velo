@@ -4,15 +4,12 @@ import {
   AudioLinesIcon,
   ArrowUpRightIcon,
   BellIcon,
-  BookText,
   CalendarIcon,
   DatabaseIcon,
   LockIcon,
   SlidersHorizontalIcon,
   SmartphoneIcon,
   SparklesIcon,
-  UserIcon,
-  UsersIcon,
 } from "lucide-react";
 import { useCallback } from "react";
 
@@ -25,7 +22,7 @@ import { type SettingsTab, useTabs } from "~/store/zustand/tabs";
 type SettingsNavItem =
   | { id: SettingsTab; label: string; icon: typeof SmartphoneIcon }
   | {
-      action: "open-templates" | "open-calendar" | "open-contacts";
+      action: "open-calendar";
       label: string;
       icon: typeof SmartphoneIcon;
     };
@@ -52,16 +49,8 @@ export function SettingsNav() {
     [currentTab, updateSettingsTabState],
   );
 
-  const handleOpenTemplates = useCallback(() => {
-    openNew({ type: "templates" });
-  }, [openNew]);
-
   const handleOpenCalendar = useCallback(() => {
     openNew({ type: "calendar" });
-  }, [openNew]);
-
-  const handleOpenContacts = useCallback(() => {
-    openNew({ type: "contacts", state: { selected: null } });
   }, [openNew]);
 
   const groups: SettingsNavGroup[] = [
@@ -70,7 +59,6 @@ export function SettingsNav() {
       items: [
         { id: "app", label: t`App`, icon: SmartphoneIcon },
         { id: "data", label: t`Data`, icon: DatabaseIcon },
-        { id: "account", label: t`Account`, icon: UserIcon },
         { id: "notifications", label: t`Notifications`, icon: BellIcon },
       ],
     },
@@ -83,11 +71,6 @@ export function SettingsNav() {
           id: "personalization",
           label: t`Personalization`,
           icon: SlidersHorizontalIcon,
-        },
-        {
-          action: "open-templates",
-          label: t`Templates`,
-          icon: BookText,
         },
       ],
     },
@@ -105,11 +88,6 @@ export function SettingsNav() {
     action: "open-calendar",
     label: t`Calendar`,
     icon: CalendarIcon,
-  });
-  groups[0].items.push({
-    action: "open-contacts",
-    label: t`Contacts`,
-    icon: UsersIcon,
   });
 
   return (
@@ -130,13 +108,7 @@ export function SettingsNav() {
                     key={isSettingsItem ? item.id : item.action}
                     onClick={() => {
                       if (!isSettingsItem) {
-                        if (item.action === "open-templates") {
-                          handleOpenTemplates();
-                        } else if (item.action === "open-calendar") {
-                          handleOpenCalendar();
-                        } else {
-                          handleOpenContacts();
-                        }
+                        handleOpenCalendar();
                         return;
                       }
 
