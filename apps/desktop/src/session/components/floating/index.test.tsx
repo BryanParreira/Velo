@@ -20,7 +20,7 @@ const hoisted = vi.hoisted(() => ({
   templateId: undefined as string | undefined,
   llmStatus: {
     status: "success",
-    providerId: "hyprnote",
+    providerId: "velo",
     isHosted: true,
   } as LLMConnectionStatus,
   isCaretNearBottom: false,
@@ -132,7 +132,7 @@ describe("FloatingActionButton", () => {
     hoisted.templateId = undefined;
     hoisted.llmStatus = {
       status: "success",
-      providerId: "hyprnote",
+      providerId: "velo",
       isHosted: true,
     };
     hoisted.isCaretNearBottom = false;

@@ -1,17 +1,13 @@
-import { useRouteContext } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 
-import { useLanguageModel, useLLMConnection } from "~/ai/hooks";
 import { useAuth } from "~/auth";
 import { useSessionTab } from "~/chat/components/use-session-tab";
 import { buildChatTools } from "~/chat/tools";
 import { useRegisterTools } from "~/contexts/tool";
 import { useSearchEngine } from "~/search/contexts/engine";
-import { initEnhancerService } from "~/services/enhancer";
 import { getSessionEvent } from "~/session/utils";
 import { useDesktopTabLifecycle } from "~/shared/desktop-tab-lifecycle";
 import * as main from "~/store/tinybase/store/main";
-import * as settings from "~/store/tinybase/store/settings";
 import { useTabs } from "~/store/zustand/tabs";
 
 export function useClassicMainLifecycle() {
@@ -35,7 +31,6 @@ export function ClassicMainServices() {
   return (
     <>
       <ToolRegistration />
-      <EnhancerInit />
     </>
   );
 }
@@ -268,44 +263,6 @@ function ToolRegistration() {
       getAuthHeaders,
     ],
   );
-
-  return null;
-}
-
-function EnhancerInit() {
-  const { persistedStore, aiTaskStore } = useRouteContext({
-    from: "__root__",
-  });
-
-  const model = useLanguageModel("enhance");
-  const { conn: llmConn } = useLLMConnection();
-  const indexes = main.UI.useIndexes(main.STORE_ID);
-  const selectedTemplateId = settings.UI.useValue(
-    "selected_template_id",
-    settings.STORE_ID,
-  ) as string | undefined;
-
-  const modelRef = useRef(model);
-  modelRef.current = model;
-  const llmConnRef = useRef(llmConn);
-  llmConnRef.current = llmConn;
-  const templateIdRef = useRef(selectedTemplateId);
-  templateIdRef.current = selectedTemplateId;
-
-  useEffect(() => {
-    if (!persistedStore || !aiTaskStore || !indexes) return;
-
-    const service = initEnhancerService({
-      mainStore: persistedStore,
-      indexes,
-      aiTaskStore,
-      getModel: () => modelRef.current,
-      getLLMConn: () => llmConnRef.current,
-      getSelectedTemplateId: () => templateIdRef.current || undefined,
-    });
-
-    return () => service.dispose();
-  }, [persistedStore, aiTaskStore, indexes]);
 
   return null;
 }

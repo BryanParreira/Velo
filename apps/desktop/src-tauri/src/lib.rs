@@ -112,12 +112,12 @@ pub async fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_analytics::init())
         .plugin(tauri_plugin_agent::init())
+        .plugin(tauri_plugin_auth::init())
         .plugin(tauri_plugin_db::init(db.clone()))
         .plugin(tauri_plugin_bedrock::init())
         .plugin(tauri_plugin_importer::init())
         .plugin(tauri_plugin_calendar::init())
         .plugin(tauri_plugin_todo::init())
-        .plugin(tauri_plugin_auth::init())
         .plugin(tauri_plugin_tracing::init())
         .plugin(tauri_plugin_hooks::init())
         .plugin(tauri_plugin_icon::init())
@@ -262,11 +262,9 @@ pub async fn main() {
         None => {}
         Some(false) => app.set_onboarding_needed(false).unwrap(),
         Some(true) => {
-            use tauri_plugin_auth::AuthPluginExt;
             use tauri_plugin_settings::SettingsPluginExt;
             use tauri_plugin_store2::Store2PluginExt;
 
-            let _ = app.clear_auth();
             let _ = app.settings().reset();
             let _ = app.store2().reset();
             let _ = app.set_onboarding_needed(true);

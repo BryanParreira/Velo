@@ -8,7 +8,6 @@ import { useListener } from "./contexts";
 import { useKeywords } from "./useKeywords";
 import { useSTTConnection } from "./useSTTConnection";
 
-import { useAuth } from "~/auth";
 import { useBillingAccess } from "~/auth/billing";
 import { env } from "~/env";
 import { deleteProcessedAudioForRetention } from "~/services/audio-retention";
@@ -82,7 +81,7 @@ export function getBatchProvider(
   if (provider === "velo") {
     if (model.startsWith("soniqo-")) return "soniqo";
     if (model.startsWith("am-")) return "am";
-    return "velo";
+    return "hyprnote";
   }
   if (DIRECT_BATCH_PROVIDERS.has(provider as TranscriptionParams["provider"])) {
     return provider as TranscriptionParams["provider"];
@@ -108,7 +107,7 @@ export function getBatchFallbackTarget({
 }): BatchTarget {
   if (isPaid && accessToken) {
     return {
-      provider: "velo",
+      provider: "hyprnote",
       model: "cloud",
       baseUrl: new URL("/stt", apiBaseUrl).toString(),
       apiKey: accessToken,
@@ -201,7 +200,6 @@ export const useRunBatch = (sessionId: string) => {
 
   const startTranscription = useListener((state) => state.startTranscription);
   const { conn } = useSTTConnection();
-  const auth = useAuth();
   const billing = useBillingAccess();
   const keywords = useKeywords(sessionId);
   const aiLanguage = useConfigValue("ai_language");
@@ -242,7 +240,7 @@ export const useRunBatch = (sessionId: string) => {
         : false;
       const fallbackTarget = getBatchFallbackTarget({
         isPaid: billing.isPaid,
-        accessToken: auth?.session?.access_token,
+        accessToken: undefined,
         apiBaseUrl: env.VITE_API_URL,
       });
       const shouldUseSelectedTarget =
@@ -423,7 +421,7 @@ export const useRunBatch = (sessionId: string) => {
     },
     [
       conn,
-      auth?.session?.access_token,
+      undefined,
       aiLanguage,
       billing.isPaid,
       indexes,

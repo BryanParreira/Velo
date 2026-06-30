@@ -53,17 +53,13 @@ export function AppSettingsView({
           />
           <SettingRow
             title={<Trans>Show app in Dock</Trans>}
-            description={
-              <Trans>Show Velo in the Dock and app switcher.</Trans>
-            }
+            description={<Trans>Show Velo in the Dock and app switcher.</Trans>}
             checked={showAppInDock.value}
             onChange={showAppInDock.onChange}
           />
           <SettingRow
             title={<Trans>Show tray icon</Trans>}
-            description={
-              <Trans>Keep Velo available from the menu bar.</Trans>
-            }
+            description={<Trans>Keep Velo available from the menu bar.</Trans>}
             checked={showTrayIcon.value}
             onChange={showTrayIcon.onChange}
           />

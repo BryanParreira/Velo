@@ -1,6 +1,5 @@
 import { Trans } from "@lingui/react/macro";
 import { platform } from "@tauri-apps/plugin-os";
-import { motion } from "motion/react";
 import { useCallback, useMemo, useState } from "react";
 
 import type { ConnectionItem } from "@hypr/api-client";
@@ -8,8 +7,6 @@ import { commands as openerCommands } from "@hypr/plugin-opener2";
 
 import { OnboardingButton } from "./shared";
 
-import { useAuth } from "~/auth";
-import { useBillingAccess } from "~/auth/billing";
 import { useConnections } from "~/auth/useConnections";
 import { useAppleCalendarSelection } from "~/calendar/components/apple/calendar-selection";
 import { TroubleShootingLink } from "~/calendar/components/apple/permission";
@@ -320,11 +317,8 @@ function OutlookCalendarConnectedContent({
   );
 }
 
-function OutlookCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
-  const auth = useAuth();
-  const { isPro, isReady, upgradeToPro } = useBillingAccess();
-  const { data: connections, isPending, isError } = useConnections(isPro);
-  const [isHovered, setHovered] = useState(false);
+function OutlookCalendarProvider() {
+  const { data: connections, isPending, isError } = useConnections();
   const providerConnections = useMemo(
     () =>
       connections?.filter(
@@ -335,22 +329,12 @@ function OutlookCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
   );
 
   const handleConnect = useCallback(() => {
-    if (!auth.session) {
-      onSignIn();
-      return;
-    }
-
-    if (!isPro) {
-      upgradeToPro();
-      return;
-    }
-
     void openOnboardingIntegrationUrl(
       OUTLOOK_PROVIDER?.nangoIntegrationId,
       undefined,
       "connect",
     );
-  }, [auth.session, isPro, onSignIn, upgradeToPro]);
+  }, []);
 
   if (!OUTLOOK_PROVIDER) {
     return null;
@@ -372,64 +356,20 @@ function OutlookCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
     );
   }
 
-  const isSignedIn = !!auth.session;
-
   return (
     <OnboardingButton
       onClick={handleConnect}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={() => setHovered(true)}
-      onBlur={() => setHovered(false)}
-      disabled={
-        isSignedIn && (isPending || (auth.session !== null && !isReady))
-      }
-      className={
-        isSignedIn
-          ? "gho border-border bg-card text-foreground hover:bg-accent disabled:hover:bg-card flex items-center gap-3 border shadow-[0_2px_6px_rgba(87,83,78,0.08),0_10px_18px_-10px_rgba(87,83,78,0.22)] disabled:cursor-not-allowed disabled:opacity-60"
-          : "border-border bg-muted text-foreground hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:border-primary focus-visible:bg-primary focus-visible:text-primary-foreground border-1 shadow-[0_2px_6px_rgba(87,83,78,0.01),0_10px_18px_-10px_rgba(87,83,78,0.1)] transition-all duration-150"
-      }
+      disabled={isPending}
+      className="border-border bg-card text-foreground hover:bg-accent disabled:hover:bg-card flex items-center gap-3 border shadow-[0_2px_6px_rgba(87,83,78,0.08),0_10px_18px_-10px_rgba(87,83,78,0.22)] disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {!isSignedIn ? (
-        <span className="grid items-center overflow-hidden">
-          <span className="invisible col-start-1 row-start-1 flex items-center justify-center gap-3">
-            <Trans>Sign in to connect</Trans>
-          </span>
-
-          <motion.span
-            className="col-start-1 row-start-1 flex items-center justify-center gap-3"
-            animate={{ y: isHovered ? "100%" : "0%" }}
-            transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
-          >
-            {OUTLOOK_PROVIDER.icon}
-            <div className="flex flex-col items-start justify-center">
-              <p className="text-md text-foreground font-normal">Outlook</p>
-            </div>
-          </motion.span>
-
-          <motion.span
-            className="col-start-1 row-start-1 flex items-center justify-center gap-3"
-            animate={{ y: isHovered ? "0%" : "-150%" }}
-            transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
-          >
-            <Trans>Sign in to connect</Trans>
-          </motion.span>
-        </span>
-      ) : (
-        <>
-          {OUTLOOK_PROVIDER.icon}
-          <Trans>Connect Outlook</Trans>
-        </>
-      )}
+      {OUTLOOK_PROVIDER.icon}
+      <Trans>Connect Outlook</Trans>
     </OnboardingButton>
   );
 }
 
-function GoogleCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
-  const auth = useAuth();
-  const { isPro, isReady, upgradeToPro } = useBillingAccess();
-  const { data: connections, isPending, isError } = useConnections(isPro);
-  const [isHovered, setHovered] = useState(false);
+function GoogleCalendarProvider() {
+  const { data: connections, isPending, isError } = useConnections();
   const providerConnections = useMemo(
     () =>
       connections?.filter(
@@ -440,22 +380,12 @@ function GoogleCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
   );
 
   const handleConnect = useCallback(() => {
-    if (!auth.session) {
-      onSignIn();
-      return;
-    }
-
-    if (!isPro) {
-      upgradeToPro();
-      return;
-    }
-
     void openOnboardingIntegrationUrl(
       GOOGLE_PROVIDER?.nangoIntegrationId,
       undefined,
       "connect",
     );
-  }, [auth.session, isPro, onSignIn, upgradeToPro]);
+  }, []);
 
   if (!GOOGLE_PROVIDER) {
     return null;
@@ -477,68 +407,21 @@ function GoogleCalendarProvider({ onSignIn }: { onSignIn: () => void }) {
     );
   }
 
-  const isSignedIn = !!auth.session;
-
   return (
     <div className="flex h-full items-center gap-3">
       <OnboardingButton
         onClick={handleConnect}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        onFocus={() => setHovered(true)}
-        onBlur={() => setHovered(false)}
-        disabled={
-          isSignedIn && (isPending || (auth.session !== null && !isReady))
-        }
-        className={
-          isSignedIn
-            ? "border-border bg-card text-foreground hover:bg-accent disabled:hover:bg-card flex items-center gap-3 border shadow-[0_2px_6px_rgba(87,83,78,0.08),0_10px_18px_-10px_rgba(87,83,78,0.22)] disabled:cursor-not-allowed disabled:opacity-60"
-            : "border-border bg-muted text-foreground hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:border-primary focus-visible:bg-primary focus-visible:text-primary-foreground border-1 shadow-[0_2px_6px_rgba(87,83,78,0.01),0_10px_18px_-10px_rgba(87,83,78,0.1)] transition-all duration-150"
-        }
+        disabled={isPending}
+        className="border-border bg-card text-foreground hover:bg-accent disabled:hover:bg-card flex items-center gap-3 border shadow-[0_2px_6px_rgba(87,83,78,0.08),0_10px_18px_-10px_rgba(87,83,78,0.22)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {!isSignedIn ? (
-          <span className="grid items-center overflow-hidden">
-            <span className="invisible col-start-1 row-start-1 flex items-center justify-center gap-3">
-              <Trans>Sign in to connect</Trans>
-            </span>
-
-            <motion.span
-              className="col-start-1 row-start-1 flex items-center justify-center gap-3"
-              animate={{ y: isHovered ? "100%" : "0%" }}
-              transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
-            >
-              {GOOGLE_PROVIDER.icon}
-              <div className="flex flex-col items-start justify-center">
-                <p className="text-md text-foreground font-normal">Google</p>
-              </div>
-            </motion.span>
-
-            <motion.span
-              className="col-start-1 row-start-1 flex items-center justify-center gap-3"
-              animate={{ y: isHovered ? "0%" : "-140%" }}
-              transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
-            >
-              <Trans>Sign in to connect</Trans>
-            </motion.span>
-          </span>
-        ) : (
-          <>
-            {GOOGLE_PROVIDER.icon}
-            <Trans>Connect Google Calendar</Trans>
-          </>
-        )}
+        {GOOGLE_PROVIDER.icon}
+        <Trans>Connect Google Calendar</Trans>
       </OnboardingButton>
     </div>
   );
 }
 
-function CalendarSectionContent({
-  onContinue,
-  onSignIn,
-}: {
-  onContinue: () => void;
-  onSignIn: () => void;
-}) {
+function CalendarSectionContent({ onContinue }: { onContinue: () => void }) {
   const isMacos = platform() === "macos";
   const calendar = usePermission("calendar");
   const isAuthorized = calendar.status === "authorized";
@@ -561,8 +444,8 @@ function CalendarSectionContent({
             />
           )}
           <div className="flex flex-wrap items-center gap-4">
-            <GoogleCalendarProvider onSignIn={onSignIn} />
-            <OutlookCalendarProvider onSignIn={onSignIn} />
+            <GoogleCalendarProvider />
+            <OutlookCalendarProvider />
           </div>
           {hasConnectedCalendar && (
             <OnboardingButton onClick={onContinue}>
@@ -582,8 +465,8 @@ function CalendarSectionContent({
             />
           )}
 
-          <GoogleCalendarProvider onSignIn={onSignIn} />
-          <OutlookCalendarProvider onSignIn={onSignIn} />
+          <GoogleCalendarProvider />
+          <OutlookCalendarProvider />
         </div>
       )}
 
@@ -600,16 +483,10 @@ function CalendarSectionContent({
   );
 }
 
-export function CalendarSection({
-  onContinue,
-  onSignIn,
-}: {
-  onContinue: () => void;
-  onSignIn: () => void;
-}) {
+export function CalendarSection({ onContinue }: { onContinue: () => void }) {
   return (
     <SyncProvider>
-      <CalendarSectionContent onContinue={onContinue} onSignIn={onSignIn} />
+      <CalendarSectionContent onContinue={onContinue} />
     </SyncProvider>
   );
 }

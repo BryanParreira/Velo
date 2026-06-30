@@ -74,6 +74,13 @@ pub fn resolve_path_inside_base(base: &Path, path: &Path) -> Result<PathBuf> {
     let suffix = candidate
         .strip_prefix(existing)
         .map_err(|_| crate::Error::Path("path_outside_base".into()))?;
+
+    // When suffix is empty, candidate == existing (file already exists).
+    // Joining with an empty path adds a trailing slash on macOS → ENOTDIR on write.
+    if suffix == std::path::Path::new("") {
+        return Ok(existing_canonical);
+    }
+
     let resolved = existing_canonical.join(suffix);
     if !resolved.starts_with(&base) {
         return Err(crate::Error::Path("path_outside_base".into()));

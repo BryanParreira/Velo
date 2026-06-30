@@ -55,12 +55,7 @@ type LLMConnectionResult = {
 
 export const useLanguageModel = (task?: CharTask): LanguageModelV3 | null => {
   const { conn } = useLLMConnection();
-  const { session } = useAuth();
-
-  // Auth is resolved at fetch time (not model construction) so token
-  // refreshes take effect without recreating the chat transport chain.
-  const accessTokenRef = useRef(session?.access_token);
-  accessTokenRef.current = session?.access_token;
+  const accessTokenRef = useRef<string | undefined>(undefined);
 
   return useMemo(() => {
     if (!conn) return null;

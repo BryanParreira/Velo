@@ -17,7 +17,7 @@ const hoisted = vi.hoisted(() => ({
     | undefined,
   llmStatus: {
     status: "success",
-    providerId: "hyprnote",
+    providerId: "velo",
     isHosted: true,
   } as LLMConnectionStatus,
   content: "",
@@ -98,7 +98,7 @@ describe("Enhanced", () => {
     hoisted.task = undefined;
     hoisted.llmStatus = {
       status: "success",
-      providerId: "hyprnote",
+      providerId: "velo",
       isHosted: true,
     };
     hoisted.content = "";
@@ -168,7 +168,7 @@ describe("Enhanced", () => {
     hoisted.llmStatus = {
       status: "error",
       reason: "not_pro",
-      providerId: "hyprnote",
+      providerId: "velo",
     };
 
     render(<Enhanced sessionId="session-1" enhancedNoteId="note-1" />);
@@ -181,7 +181,7 @@ describe("Enhanced", () => {
     hoisted.llmStatus = {
       status: "error",
       reason: "unauthenticated",
-      providerId: "hyprnote",
+      providerId: "velo",
     };
 
     render(<Enhanced sessionId="session-1" enhancedNoteId="note-1" />);

@@ -12,20 +12,9 @@ import { commands } from "~/types/tauri.gen";
 
 const SOCIALS = [
   {
-    label: "Discord",
-    icon: "simple-icons:discord",
-    url: "https://discord.gg/CX8gTH2tj9",
-  },
-  {
     label: "GitHub",
     icon: "simple-icons:github",
-    url: "https://github.com/fastrepl/char",
-  },
-  {
-    label: "X",
-    icon: "simple-icons:x",
-    size: 14,
-    url: "https://x.com/getcharnotes",
+    url: "https://github.com/fastrepl/anarlog",
   },
 ] as const;
 
@@ -35,23 +24,19 @@ export function FinalDescription() {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
       <span>
-        <Trans>Join our community and stay updated:</Trans>
+        <Trans>Star us on GitHub:</Trans>
       </span>
       <div className="flex items-center gap-2">
-        {SOCIALS.map((social) => {
-          const iconSize = "size" in social ? social.size : SOCIAL_ICON_SIZE;
-
-          return (
-            <button
-              key={social.label}
-              onClick={() => void openerCommands.openUrl(social.url, null)}
-              className="text-muted-foreground hover:text-muted-foreground inline-flex size-5 items-center justify-center rounded-md transition-colors duration-150"
-              aria-label={social.label}
-            >
-              <Icon icon={social.icon} width={iconSize} height={iconSize} />
-            </button>
-          );
-        })}
+        {SOCIALS.map((social) => (
+          <button
+            key={social.label}
+            onClick={() => void openerCommands.openUrl(social.url, null)}
+            className="text-muted-foreground hover:text-muted-foreground inline-flex size-5 items-center justify-center rounded-md transition-colors duration-150"
+            aria-label={social.label}
+          >
+            <Icon icon={social.icon} width={SOCIAL_ICON_SIZE} height={SOCIAL_ICON_SIZE} />
+          </button>
+        ))}
       </div>
     </div>
   );
