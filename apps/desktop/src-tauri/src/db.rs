@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use hypr_db_core::Db;
 
-const DEV_BUNDLE_ID: &str = "com.hyprnote.dev";
+const DEV_BUNDLE_ID: &str = "com.velo.dev";
 const DB_FILENAME: &str = "app.db";
 
 pub async fn open_desktop_db(identifier: &str) -> Arc<Db> {

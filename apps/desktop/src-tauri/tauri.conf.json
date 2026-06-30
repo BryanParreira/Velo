@@ -24,7 +24,7 @@
     }
   },
   "bundle": {
-    "publisher": "Fastrepl",
+    "publisher": "Velo",
     "active": true,
     "createUpdaterArtifacts": false,
     "targets": "all",
@@ -77,7 +77,8 @@
       }
     },
     "updater": {
-      "active": false
+      "active": false,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFFNUI0ODhBNzhBMTEwQQpSV1FLRVlxbmlMVGxDdXJvaUVTTnlwNEF5R1Bodzh3WThMZUpNMVk4K0hhbnV4TDZ1TFFucC9Gbwo="
     }
   }
 }

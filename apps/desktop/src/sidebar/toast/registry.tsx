@@ -4,7 +4,7 @@ import type { DownloadProgress, ToastCondition, ToastType } from "./types";
 
 import type { DevtoolsToastPreview } from "~/store/zustand/devtools-toast-preview";
 
-const ANARLOG_ICON_SRC = "/assets/anarlog-icon.png";
+const VELO_ICON_SRC = "/assets/anarlog-icon.png";
 
 type ToastRegistryEntry = {
   toast: ToastType;
@@ -131,7 +131,7 @@ export function createToastRegistry({
         id: "pro-requires-login",
         icon: (
           <img
-            src={ANARLOG_ICON_SRC}
+            src={VELO_ICON_SRC}
             alt="Velo Pro"
             className="size-5 object-contain object-center"
           />
