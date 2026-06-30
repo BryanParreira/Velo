@@ -41,15 +41,12 @@ jobs:
         run: pnpm -F @hypr/ui build
 
       - name: Import Apple certificate
-        if: ${{ env.APPLE_CERTIFICATE != '' }}
         uses: ./.github/actions/apple_cert
         id: apple-cert
         with:
           apple-certificate: ${{ secrets.APPLE_CERTIFICATE }}
           apple-certificate-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
 
       - name: Build desktop app
         run: |
@@ -66,7 +63,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Notarize DMG
-        if: ${{ steps.apple-cert.outputs.cert-id != '' }}
         uses: ./.github/actions/macos_notarize_dmg
         with:
           dmg-path: apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
