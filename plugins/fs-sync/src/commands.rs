@@ -53,10 +53,14 @@ pub(crate) async fn write_json_batch<R: tauri::Runtime>(
     let base_path = base
         .as_std_path()
         .canonicalize()
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("{e} (canonicalize: {base:?})"))?;
     let items: Vec<(Value, PathBuf)> = items
         .into_iter()
-        .map(|(json, path)| resolve_vault_path(&base_path, &path).map(|path| (json, path)))
+        .map(|(json, path)| {
+            resolve_vault_path(&base_path, &path)
+                .map_err(|e| format!("{e} (resolve: base={base_path:?}, path={path:?})"))
+                .map(|path| (json, path))
+        })
         .collect::<Result<_, _>>()?;
 
     let relative_paths: Vec<String> = items
@@ -74,10 +78,12 @@ pub(crate) async fn write_json_batch<R: tauri::Runtime>(
     spawn_blocking!({
         items.into_par_iter().try_for_each(|(json, path)| {
             if let Some(parent) = path.parent() {
-                std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+                std::fs::create_dir_all(parent)
+                    .map_err(|e| format!("{e} (create_dir_all: {parent:?})"))?;
             }
             let content = crate::json::serialize(json)?;
-            std::fs::write(path, content).map_err(|e| e.to_string())
+            std::fs::write(&path, content)
+                .map_err(|e| format!("{e} (write: {path:?})"))
         })
     })
 }
@@ -92,10 +98,14 @@ pub(crate) async fn write_document_batch<R: tauri::Runtime>(
     let base_path = base
         .as_std_path()
         .canonicalize()
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("{e} (canonicalize: {base:?})"))?;
     let items: Vec<(ParsedDocument, PathBuf)> = items
         .into_iter()
-        .map(|(doc, path)| resolve_vault_path(&base_path, &path).map(|path| (doc, path)))
+        .map(|(doc, path)| {
+            resolve_vault_path(&base_path, &path)
+                .map_err(|e| format!("{e} (resolve: base={base_path:?}, path={path:?})"))
+                .map(|path| (doc, path))
+        })
         .collect::<Result<_, _>>()?;
 
     let relative_paths: Vec<String> = items
@@ -113,10 +123,12 @@ pub(crate) async fn write_document_batch<R: tauri::Runtime>(
     spawn_blocking!({
         items.into_par_iter().try_for_each(|(doc, path)| {
             if let Some(parent) = path.parent() {
-                std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+                std::fs::create_dir_all(parent)
+                    .map_err(|e| format!("{e} (create_dir_all: {parent:?})"))?;
             }
             let content = doc.render().map_err(|e| e.to_string())?;
-            std::fs::write(path, content).map_err(|e| e.to_string())
+            std::fs::write(&path, content)
+                .map_err(|e| format!("{e} (write: {path:?})"))
         })
     })
 }

@@ -1,11 +1,11 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Anarlog Staging",
-  "mainBinaryName": "anarlog-staging",
-  "identifier": "com.hyprnote.staging",
+  "productName": "Velo Staging",
+  "mainBinaryName": "velo-staging",
+  "identifier": "com.velo.staging",
   "plugins": {
     "deep-link": {
-      "desktop": { "schemes": ["hyprnote-staging"] }
+      "desktop": { "schemes": ["velo-staging"] }
     },
     "updater": {
       "active": false

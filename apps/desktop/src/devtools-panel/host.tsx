@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 
 import { commands as notificationCommands } from "@hypr/plugin-notification";
@@ -9,9 +8,6 @@ import {
   openUrlWithInstruction,
 } from "@hypr/plugin-windows";
 
-import { useBillingAccess } from "~/auth/billing";
-import { TrialEndedDialog } from "~/billing/trial-ended-dialog";
-import { TrialStartedDialog } from "~/billing/trial-started-dialog";
 import { useDevtoolsStore, useDevtoolsUserId } from "~/devtools-panel/hooks";
 import { useMountEffect } from "~/shared/hooks/useMountEffect";
 import {
@@ -29,9 +25,6 @@ import {
   AUTO_STOP_CONFIRM_TIMEOUT_SECONDS,
   createAutoStopEndedNotificationKey,
 } from "~/stt/auto-stop-notification";
-import { commands } from "~/types/tauri.gen";
-
-const canResolveDevtoolsPanel = import.meta.env.MODE !== "test";
 
 type DevtoolsPanelAction =
   | "navigation:onboarding"
@@ -76,15 +69,8 @@ export function DevtoolsFloatingPanelHost() {
   return <DevtoolsFloatingPanelSync />;
 }
 
-function useShouldShowDevtoolsPanel(isMainWindow: boolean) {
-  const enabledQuery = useQuery({
-    queryKey: ["devtools-panel", "enabled"],
-    queryFn: commands.showDevtool,
-    enabled: isMainWindow && canResolveDevtoolsPanel,
-    staleTime: Infinity,
-  });
-
-  return enabledQuery.data ?? false;
+function useShouldShowDevtoolsPanel(_isMainWindow: boolean) {
+  return false;
 }
 
 function DevtoolsFloatingPanelDisabled() {
@@ -137,7 +123,6 @@ function useDevtoolsPanelActions() {
   const openNew = useTabs((s) => s.openNew);
   const store = useDevtoolsStore();
   const user_id = useDevtoolsUserId();
-  const { trialDaysRemaining, upgradeToPro } = useBillingAccess();
   const showToastPreview = useDevtoolsToastPreview(
     (state) => state.showPreview,
   );
@@ -146,8 +131,6 @@ function useDevtoolsPanelActions() {
   );
   const showOtaPreview = useDevtoolsOtaPreview((state) => state.showPreview);
   const clearOtaPreview = useDevtoolsOtaPreview((state) => state.clearPreview);
-  const [trialStartedOpen, setTrialStartedOpen] = useState(false);
-  const [trialEndedOpen, setTrialEndedOpen] = useState(false);
   const [shouldThrow, setShouldThrow] = useState(false);
 
   const showMainWindow = useCallback(async () => {
@@ -412,10 +395,7 @@ function useDevtoolsPanelActions() {
           void notificationCommands.clearNotifications();
           return;
         case "billing:trial-started":
-          setTrialStartedOpen(true);
-          return;
         case "billing:trial-ended":
-          setTrialEndedOpen(true);
           return;
         case "countdown:note-60":
           createWithCountdown(60);
@@ -455,20 +435,7 @@ function useDevtoolsPanelActions() {
   );
 
   return {
-    dialogs: (
-      <>
-        <TrialStartedDialog
-          open={trialStartedOpen}
-          onOpenChange={setTrialStartedOpen}
-          trialDaysRemaining={trialDaysRemaining}
-        />
-        <TrialEndedDialog
-          open={trialEndedOpen}
-          onOpenChange={setTrialEndedOpen}
-          onUpgrade={upgradeToPro}
-        />
-      </>
-    ),
+    dialogs: null,
     handleAction,
     shouldThrow,
   };

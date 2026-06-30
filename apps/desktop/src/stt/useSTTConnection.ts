@@ -4,9 +4,7 @@ import { useMemo } from "react";
 import { commands as localSttCommands } from "@hypr/plugin-local-stt";
 import type { AIProviderStorage } from "@hypr/store";
 
-import { useAuth } from "~/auth";
 import { useBillingAccess } from "~/auth/billing";
-import { env } from "~/env";
 import { providerRowId } from "~/settings/ai/shared";
 import { type ProviderId } from "~/settings/ai/stt/shared";
 import * as settings from "~/store/tinybase/store/settings";
@@ -16,7 +14,6 @@ import {
 } from "~/stt/capabilities";
 
 export const useSTTConnection = () => {
-  const auth = useAuth();
   const billing = useBillingAccess();
   const { current_stt_provider, current_stt_model } = settings.UI.useValues(
     settings.STORE_ID,
@@ -98,16 +95,7 @@ export const useSTTConnection = () => {
     }
 
     if (isCloudModel) {
-      if (!auth?.session || !billing.isPaid) {
-        return null;
-      }
-
-      return {
-        provider: current_stt_provider,
-        model: current_stt_model,
-        baseUrl: baseUrl ?? new URL("/stt", env.VITE_API_URL).toString(),
-        apiKey: auth.session.access_token,
-      };
+      return null;
     }
 
     if (!baseUrl || !apiKey) {
@@ -129,7 +117,6 @@ export const useSTTConnection = () => {
     local.data,
     baseUrl,
     apiKey,
-    auth,
     billing.isPaid,
   ]);
 

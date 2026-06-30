@@ -82,8 +82,7 @@ export function ChatBodyEmpty({
                 : "text-muted-foreground",
             ])}
           >
-            Hi, I'm Velo AI. Set up a language model and I'll be ready to
-            help.
+            Hi, I'm Velo AI. Set up a language model and I'll be ready to help.
           </p>
           <button
             onClick={handleGoToSettings}

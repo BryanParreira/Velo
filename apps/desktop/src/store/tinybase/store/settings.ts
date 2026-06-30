@@ -359,11 +359,7 @@ function clearInvalidSttModel(store: Store) {
   const provider = store.getValue("current_stt_provider") as string | undefined;
   const model = store.getValue("current_stt_model") as string | undefined;
 
-  if (
-    provider === "velo" &&
-    model &&
-    !isConfiguredSttModel(provider, model)
-  ) {
+  if (provider === "velo" && model && !isConfiguredSttModel(provider, model)) {
     store.delValue("current_stt_model");
     return true;
   }
