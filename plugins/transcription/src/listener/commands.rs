@@ -89,8 +89,8 @@ pub async fn is_supported_languages_live<R: tauri::Runtime>(
     model: Option<String>,
     languages: Vec<String>,
 ) -> Result<bool, String> {
-    if provider == "custom" {
-        return Ok(true);
+    if provider == "custom" || provider == "ollama" {
+        return Ok(false);
     }
 
     let languages_parsed = languages

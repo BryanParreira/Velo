@@ -323,8 +323,17 @@ pub fn normalize_languages(languages: &[hypr_language::Language]) -> Vec<hypr_la
     result
 }
 
+pub fn is_local_ollama(base_url: &str) -> bool {
+    url::Url::parse(base_url)
+        .ok()
+        .map(|u| is_local_host(u.host_str().unwrap_or("")) && u.port() == Some(11434))
+        .unwrap_or(false)
+}
+
 fn is_local_argmax(base_url: &str) -> bool {
-    host_matches(base_url, is_local_host) && !is_hyprnote_local_proxy(base_url)
+    host_matches(base_url, is_local_host)
+        && !is_hyprnote_local_proxy(base_url)
+        && !is_local_ollama(base_url)
 }
 
 pub(crate) fn build_ws_url_from_base_with(
@@ -414,6 +423,8 @@ pub enum AdapterKind {
     AssemblyAI,
     #[strum(serialize = "openai")]
     OpenAI,
+    #[strum(serialize = "ollama")]
+    Ollama,
     #[strum(serialize = "gladia")]
     Gladia,
     #[strum(serialize = "elevenlabs")]
@@ -440,6 +451,10 @@ impl AdapterKind {
             return Self::Hyprnote;
         }
 
+        if is_local_ollama(base_url) {
+            return Self::Ollama;
+        }
+
         if is_local_argmax(base_url) {
             return Self::Argmax;
         }
@@ -451,7 +466,7 @@ impl AdapterKind {
 
     pub fn has_live_mode(&self) -> bool {
         match self {
-            Self::AquaVoice | Self::Argmax | Self::OpenAI | Self::Pyannote => false,
+            Self::AquaVoice | Self::Argmax | Self::OpenAI | Self::Ollama | Self::Pyannote => false,
             Self::Soniox
             | Self::Cartesia
             | Self::Fireworks
@@ -480,7 +495,7 @@ impl AdapterKind {
             Self::Soniox => SonioxAdapter::language_support_live(languages),
             Self::AssemblyAI => AssemblyAIAdapter::language_support_live(languages),
             Self::Gladia => GladiaAdapter::language_support_live(languages),
-            Self::OpenAI => LanguageSupport::NotSupported,
+            Self::OpenAI | Self::Ollama => LanguageSupport::NotSupported,
             Self::Fireworks => FireworksAdapter::language_support_live(languages),
             Self::ElevenLabs => ElevenLabsAdapter::language_support_live(languages),
             Self::DashScope => DashScopeAdapter::language_support_live(languages),
@@ -506,7 +521,7 @@ impl AdapterKind {
             Self::Soniox => SonioxAdapter::language_support_batch(languages),
             Self::AssemblyAI => AssemblyAIAdapter::language_support_batch(languages),
             Self::Gladia => GladiaAdapter::language_support_batch(languages),
-            Self::OpenAI => OpenAIAdapter::language_support_batch(languages),
+            Self::OpenAI | Self::Ollama => OpenAIAdapter::language_support_batch(languages),
             Self::Fireworks => FireworksAdapter::language_support_batch(languages),
             Self::ElevenLabs => ElevenLabsAdapter::language_support_batch(languages),
             Self::DashScope => DashScopeAdapter::language_support_batch(languages),

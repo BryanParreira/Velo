@@ -61,9 +61,11 @@ function ProviderContext({ providerId }: { providerId: ProviderId }) {
                     ? `Use [Fireworks AI](https://fireworks.ai) for transcriptions.`
                     : providerId === "mistral"
                       ? `Use [Mistral](https://mistral.ai) for transcriptions.`
-                      : providerId === "custom"
-                        ? `We only support **Deepgram compatible** endpoints for now.`
-                        : "";
+                      : providerId === "ollama"
+                        ? `Use [Ollama](https://ollama.com) with a local audio-capable model like **gemma4:e2b** for transcription. Requires Ollama running locally.`
+                        : providerId === "custom"
+                          ? `We only support **Deepgram compatible** endpoints for now.`
+                          : "";
 
   if (!content.trim()) {
     return null;

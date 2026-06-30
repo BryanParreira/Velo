@@ -519,6 +519,21 @@ function useConfiguredMapping(): Record<
         return [provider.id, { configured: true, models: [] }];
       }
 
+      if (provider.id === "ollama") {
+        return [
+          provider.id,
+          {
+            configured: true,
+            models: provider.models.map((model) => ({
+              id: model,
+              isDownloaded: true,
+              category: "latest" as const,
+              mode: "batch" as const,
+            })),
+          },
+        ];
+      }
+
       return [
         provider.id,
         {
