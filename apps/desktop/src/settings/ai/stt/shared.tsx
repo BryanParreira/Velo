@@ -164,10 +164,10 @@ export function formatModelSize(sizeBytes?: number | null) {
 
 const _PROVIDERS = [
   {
-    disabled: false,
+    disabled: true,
     id: "velo",
     displayName: "Velo",
-    badge: "Recommended",
+    badge: null,
     icon: <VeloProviderIcon />,
     baseUrl: new URL("/stt", env.VITE_API_URL).toString(),
     models: ["cloud"],

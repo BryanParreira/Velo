@@ -34,7 +34,11 @@ export function FinalDescription() {
             className="text-muted-foreground hover:text-muted-foreground inline-flex size-5 items-center justify-center rounded-md transition-colors duration-150"
             aria-label={social.label}
           >
-            <Icon icon={social.icon} width={SOCIAL_ICON_SIZE} height={SOCIAL_ICON_SIZE} />
+            <Icon
+              icon={social.icon}
+              width={SOCIAL_ICON_SIZE}
+              height={SOCIAL_ICON_SIZE}
+            />
           </button>
         ))}
       </div>
