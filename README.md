@@ -1,31 +1,44 @@
 # Velo
 
-An open-source AI meeting notetaker that is local-first, privacy-first, and yours to fork.
+> Your meetings. Your machine. Your notes.
 
-## Download
-
-→ [github.com/BryanParreira/Velo/releases/latest](https://github.com/BryanParreira/Velo/releases/latest)
-
-## What it does
-
-Open it and join a meeting. Velo records, transcribes locally, and saves your notes as markdown on disk. Bring your own LLM: OpenAI, Anthropic, Gemini, OpenRouter, Ollama, LM Studio, or anything OpenAI-compatible.
-
-## Why use it
-
-- **Your data, your disk.** Every meeting is a `.md` file you can inspect, search, and sync through Dropbox, iCloud, Syncthing, or git. No cloud backend means no cloud lock-in.
-- **Local transcription.** Transcription runs on-device, so audio never leaves your machine.
-- **Bring your own AI.** Use any LLM provider, including OpenAI-compatible services and local models.
-- **Open source, MIT.** Fork it, sell it, or self-host it.
-- **No accounts or tracking.** There is no hosted account model.
-
-## Build from source
-
-```bash
-# Prerequisites: Rust, Node.js, pnpm
-pnpm install
-pnpm -F @hypr/desktop tauri:dev
-```
+Velo is a local-first AI meeting assistant for Mac. It records, transcribes, and takes notes — entirely on your device. No cloud. No subscriptions. No accounts.
 
 ---
 
-**License:** MIT · **Maintainer:** [BryanParreira](https://github.com/BryanParreira)
+## Download
+
+**[→ Download for Mac](https://github.com/BryanParreira/Velo/releases/latest)**
+
+Requires macOS 14.2 or later.
+
+---
+
+## Features
+
+**Local transcription** — Audio never leaves your machine. Transcription runs on-device using your choice of provider: Argmax, Whisper, or Ollama with a local model like `gemma4:e2b`.
+
+**Bring your own AI** — Velo AI works with any LLM: OpenAI, Anthropic, Gemini, OpenRouter, Ollama, LM Studio, or anything OpenAI-compatible. You own the API key.
+
+**Plain markdown notes** — Every session is a `.md` file on disk. Inspect it, search it, sync it with iCloud, Dropbox, Syncthing, or git. No proprietary format, no lock-in.
+
+**No accounts, no tracking** — There is no sign-up, no telemetry, no cloud backend. Open the app and go.
+
+---
+
+## Privacy
+
+Velo is designed so nothing has to leave your computer:
+
+- Transcription can run fully on-device
+- Notes are stored as local files
+- AI queries go directly to your chosen provider — not through Velo servers
+- No analytics, no crash reporting, no account model
+
+---
+
+## License
+
+MIT — fork it, modify it, ship it.
+
+**Maintainer:** [BryanParreira](https://github.com/BryanParreira)
