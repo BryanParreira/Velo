@@ -451,6 +451,22 @@ export function buildKeymap(onNavigateToTitle?: (pixelWidth?: number) => void) {
     return true;
   };
 
+  const exitHeadingToParagraph: Command = (state, dispatch) => {
+    const { $from } = state.selection;
+    if (!state.selection.empty) return false;
+    if ($from.parent.type !== schema.nodes.heading) return false;
+    if ($from.parentOffset !== $from.parent.content.size) return false;
+    if (dispatch) {
+      const tr = state.tr;
+      const insertPos = $from.after();
+      const para = schema.nodes.paragraph.create();
+      tr.insert(insertPos, para);
+      tr.setSelection(TextSelection.create(tr.doc, insertPos + 1));
+      dispatch(tr.scrollIntoView());
+    }
+    return true;
+  };
+
   keys["Enter"] = chainCommands(
     exitCodeBlockOnEmptyLine,
     newlineInCode,
@@ -470,6 +486,7 @@ export function buildKeymap(onNavigateToTitle?: (pixelWidth?: number) => void) {
       if (!nodeType) return false;
       return splitListItem(nodeType)(state, dispatch);
     },
+    exitHeadingToParagraph,
     createParagraphNear,
     liftEmptyBlock,
     splitBlock,
