@@ -80,6 +80,14 @@ export function getLocalModelIcon(model: string): ModelIconSpec | null {
     };
   }
 
+  if (value.includes("gemma")) {
+    return {
+      label: "G",
+      title: "Google Gemma (Ollama)",
+      className: "border-purple-200 bg-purple-50 text-purple-700",
+    };
+  }
+
   return null;
 }
 

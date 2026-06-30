@@ -5,6 +5,7 @@ import {
   ElevenLabs,
   Fireworks,
   Mistral,
+  Ollama,
   OpenAI,
 } from "@lobehub/icons";
 import type { ReactNode } from "react";
@@ -29,6 +30,7 @@ type Provider = {
   badge?: string | null;
   requirements: ProviderRequirement[];
   links?: {
+    download?: { label: string; url: string };
     models?: { label: string; url: string };
     setup?: { label: string; url: string };
   };
@@ -121,6 +123,10 @@ export const displayModelId = (model: string) => {
 
   if (model === "faster-whisper-large-v3-turbo") {
     return "Faster Whisper Large V3 Turbo";
+  }
+
+  if (model === "gemma4:e2b") {
+    return "Gemma 4 E2B";
   }
 
   return model;
@@ -350,6 +356,23 @@ const _PROVIDERS = [
     baseUrl: "https://api.aquavoice.com/api/v1",
     models: ["avalon-v1-en"],
     requirements: [{ kind: "requires_config", fields: ["api_key"] }],
+  },
+  {
+    disabled: false,
+    id: "ollama",
+    displayName: "Ollama",
+    badge: "Recommended",
+    icon: <Ollama size={16} />,
+    baseUrl: "http://127.0.0.1:11434/v1",
+    models: ["gemma4:e2b"],
+    requirements: [],
+    links: {
+      download: {
+        label: "Download Ollama",
+        url: "https://ollama.com/download",
+      },
+      models: { label: "Available models", url: "https://ollama.com/library" },
+    },
   },
   {
     disabled: false,

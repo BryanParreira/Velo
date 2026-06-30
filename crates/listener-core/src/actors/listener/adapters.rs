@@ -104,7 +104,7 @@ pub(super) async fn spawn_rx_task(
         DashScope => DashScopeAdapter,
         Mistral => MistralAdapter,
         Hyprnote => HyprnoteAdapter,
-    }, batch_only: [OpenAI, AquaVoice, Pyannote])?;
+    }, batch_only: [OpenAI, Ollama, AquaVoice, Pyannote])?;
 
     Ok((result.0, result.1, result.2, adapter_kind.to_string()))
 }

@@ -55,6 +55,7 @@ pub(super) async fn run_direct_batch_for_adapter_kind(
         AssemblyAI => AssemblyAIAdapter,
         Fireworks => FireworksAdapter,
         OpenAI => OpenAIAdapter,
+        Ollama => OpenAIAdapter,
         Gladia => GladiaAdapter,
         ElevenLabs => ElevenLabsAdapter,
         Pyannote => PyannoteAdapter,

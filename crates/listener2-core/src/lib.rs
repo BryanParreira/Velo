@@ -23,8 +23,8 @@ pub fn is_supported_languages_live(
     model: Option<&str>,
     languages: &[hypr_language::Language],
 ) -> std::result::Result<bool, String> {
-    if provider == "custom" {
-        return Ok(true);
+    if provider == "custom" || provider == "ollama" {
+        return Ok(false);
     }
 
     if provider == "soniqo" {
@@ -62,7 +62,7 @@ pub fn is_supported_languages_batch(
     model: Option<&str>,
     languages: &[hypr_language::Language],
 ) -> std::result::Result<bool, String> {
-    if provider == "custom" {
+    if provider == "custom" || provider == "ollama" {
         return Ok(true);
     }
 
