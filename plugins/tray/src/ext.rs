@@ -136,9 +136,9 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
         let app = self.manager.app_handle().clone();
 
         if visible {
-            let app2 = app.clone();
+            let app_clone = app.clone();
             app.run_on_main_thread(move || {
-                let _ = app2.tray().create_tray_menu();
+                let _ = app_clone.tray().create_tray_menu();
             })?;
             Self::refresh_icon(&app)?;
         } else {
@@ -147,8 +147,9 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
             {
                 handle.abort();
             }
+            let app_clone = app.clone();
             app.run_on_main_thread(move || {
-                let _ = app.remove_tray_by_id(TRAY_ID);
+                let _ = app_clone.remove_tray_by_id(TRAY_ID);
             })?;
         }
 
@@ -158,8 +159,9 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
     pub fn set_title(&self, title: Option<&str>) -> Result<()> {
         let app = self.manager.app_handle().clone();
         let title = title.map(str::to_string);
+        let app_clone = app.clone();
         app.run_on_main_thread(move || {
-            if let Some(tray) = app.tray_by_id(TRAY_ID) {
+            if let Some(tray) = app_clone.tray_by_id(TRAY_ID) {
                 let _ = tray.set_title(title.as_deref());
             }
         })?;
@@ -181,7 +183,8 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
         Self::refresh_icon(self.manager.app_handle())
     }
 
-    fn refresh_icon(app: &AppHandle<tauri::Wry>) -> Result<()> {
+    fn refresh_icon(app_ref: &AppHandle<tauri::Wry>) -> Result<()> {
+        let app = app_ref.clone();
         {
             let mut task = ANIMATION_TASK.lock().unwrap();
             if let Some(handle) = task.take() {
@@ -220,8 +223,9 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
         };
 
         let image = state.to_image()?;
+        let app_clone = app.clone();
         app.run_on_main_thread(move || {
-            if let Some(tray) = app.tray_by_id(TRAY_ID) {
+            if let Some(tray) = app_clone.tray_by_id(TRAY_ID) {
                 let _ = tray.set_icon(Some(image));
             }
         })?;
@@ -231,19 +235,20 @@ impl<'a, M: tauri::Manager<tauri::Wry>> Tray<'a, tauri::Wry, M> {
 
     pub fn set_start_disabled(&self, disabled: bool) -> Result<()> {
         let app = self.manager.app_handle().clone();
+        let app_clone = app.clone();
         app.run_on_main_thread(move || {
-            if let Some(tray) = app.tray_by_id(TRAY_ID) {
+            if let Some(tray) = app_clone.tray_by_id(TRAY_ID) {
                 let menu = Menu::with_items(
-                    &app,
+                    &app_clone,
                     &[
-                        &TrayVersion::build(&app).unwrap(),
-                        &PredefinedMenuItem::separator(&app).unwrap(),
-                        &TrayOpen::build(&app).unwrap(),
-                        &TrayStart::build_with_disabled(&app, disabled).unwrap(),
-                        &PredefinedMenuItem::separator(&app).unwrap(),
-                        &TrayCheckUpdate::build(&app).unwrap(),
-                        &PredefinedMenuItem::separator(&app).unwrap(),
-                        &TrayQuit::build(&app).unwrap(),
+                        &TrayVersion::build(&app_clone).unwrap(),
+                        &PredefinedMenuItem::separator(&app_clone).unwrap(),
+                        &TrayOpen::build(&app_clone).unwrap(),
+                        &TrayStart::build_with_disabled(&app_clone, disabled).unwrap(),
+                        &PredefinedMenuItem::separator(&app_clone).unwrap(),
+                        &TrayCheckUpdate::build(&app_clone).unwrap(),
+                        &PredefinedMenuItem::separator(&app_clone).unwrap(),
+                        &TrayQuit::build(&app_clone).unwrap(),
                     ],
                 );
                 if let Ok(menu) = menu {
