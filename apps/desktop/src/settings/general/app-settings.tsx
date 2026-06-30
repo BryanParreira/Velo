@@ -1,4 +1,3 @@
-import { Trans } from "@lingui/react/macro";
 import { type ReactNode, useId } from "react";
 
 import { Switch } from "@hypr/ui/components/ui/switch";
@@ -34,32 +33,26 @@ export function AppSettingsView({
       <section>
         <div className="flex flex-col gap-4">
           <SettingRow
-            title={<Trans>Start Velo at login</Trans>}
-            description={
-              <Trans>Always ready without manually launching.</Trans>
-            }
+            title="Start Velo at login"
+            description="Always ready without manually launching."
             checked={autostart.value}
             onChange={autostart.onChange}
           />
           <SettingRow
-            title={<Trans>Share usage data</Trans>}
-            description={
-              <Trans>
-                Send anonymous usage analytics to help improve Velo.
-              </Trans>
-            }
+            title="Share usage data"
+            description="Send anonymous usage analytics to help improve Velo."
             checked={telemetryConsent.value}
             onChange={telemetryConsent.onChange}
           />
           <SettingRow
-            title={<Trans>Show app in Dock</Trans>}
-            description={<Trans>Show Velo in the Dock and app switcher.</Trans>}
+            title="Show app in Dock"
+            description="Show Velo in the Dock and app switcher."
             checked={showAppInDock.value}
             onChange={showAppInDock.onChange}
           />
           <SettingRow
-            title={<Trans>Show tray icon</Trans>}
-            description={<Trans>Keep Velo available from the menu bar.</Trans>}
+            title="Show tray icon"
+            description="Keep Velo available from the menu bar."
             checked={showTrayIcon.value}
             onChange={showTrayIcon.onChange}
           />
@@ -67,47 +60,29 @@ export function AppSettingsView({
       </section>
 
       <section>
-        <h2 className="mb-4 font-sans text-lg font-semibold">
-          <Trans>Meetings</Trans>
-        </h2>
+        <h2 className="mb-4 font-sans text-lg font-semibold">Meetings</h2>
         <div className="flex flex-col gap-4">
           <SettingRow
-            title={<Trans>Start when meeting begins</Trans>}
-            description={
-              <Trans>
-                Automatically start listening when an event-backed note reaches
-                its scheduled start time.
-              </Trans>
-            }
+            title="Start when meeting begins"
+            description="Automatically start listening when an event-backed note reaches its scheduled start time."
             checked={autoStartScheduledMeetings.value}
             onChange={autoStartScheduledMeetings.onChange}
           />
           <SettingRow
-            title={<Trans>Stop when meeting ends</Trans>}
-            description={
-              <Trans>
-                Automatically stop listening when the meeting app releases the
-                microphone.
-              </Trans>
-            }
+            title="Stop when meeting ends"
+            description="Automatically stop listening when the meeting app releases the microphone."
             checked={autoStopMeetings.value}
             onChange={autoStopMeetings.onChange}
           />
           <SettingRow
-            title={<Trans>Show floating bar</Trans>}
-            description={
-              <Trans>Show the compact floating control while listening.</Trans>
-            }
+            title="Show floating bar"
+            description="Show the compact floating control while listening."
             checked={floatingBar.value}
             onChange={floatingBar.onChange}
           />
           <SettingRow
-            title={<Trans>Show live transcript overlay</Trans>}
-            description={
-              <Trans>
-                Show the live transcript overlay by default while listening.
-              </Trans>
-            }
+            title="Show live transcript overlay"
+            description="Show the live transcript overlay by default while listening."
             checked={liveCaption.value}
             onChange={liveCaption.onChange}
           />

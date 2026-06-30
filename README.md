@@ -1,22 +1,14 @@
-![Velo](https://repository-images.githubusercontent.com/900550981/a4267a9f-414b-4c36-965c-419313ce2417)
-
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fastrepl/anarlog)
-
 # Velo
 
 An open-source AI meeting notetaker that is local-first, privacy-first, and yours to fork.
 
-Granola, rearranged.
+## Download
 
-## How to use it
+→ [github.com/BryanParreira/Velo/releases/latest](https://github.com/BryanParreira/Velo/releases/latest)
 
-Download the latest release for your platform:
-
-→ [github.com/fastrepl/anarlog/releases/latest](https://github.com/fastrepl/anarlog/releases/latest)
+## What it does
 
 Open it and join a meeting. Velo records, transcribes locally, and saves your notes as markdown on disk. Bring your own LLM: OpenAI, Anthropic, Gemini, OpenRouter, Ollama, LM Studio, or anything OpenAI-compatible.
-
-To self-host, clone the repo, build it, and run it.
 
 ## Why use it
 
@@ -26,6 +18,14 @@ To self-host, clone the repo, build it, and run it.
 - **Open source, MIT.** Fork it, sell it, or self-host it.
 - **No accounts or tracking.** There is no hosted account model.
 
+## Build from source
+
+```bash
+# Prerequisites: Rust, Node.js, pnpm
+pnpm install
+pnpm -F @hypr/desktop tauri:dev
+```
+
 ---
 
-**License:** MIT · **Maintainers:** [fastrepl](https://github.com/fastrepl)
+**License:** MIT · **Maintainer:** [BryanParreira](https://github.com/BryanParreira)
