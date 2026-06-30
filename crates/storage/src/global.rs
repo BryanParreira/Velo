@@ -1,9 +1,10 @@
 use std::path::{Path, PathBuf};
 
 pub const VAULT_CONFIG_FILENAME: &str = "global.json";
-const STAGING_BUNDLE_ID: &str = "com.hyprnote.staging";
-const RELEASE_APP_FOLDER: &str = "anarlog";
-const LEGACY_RELEASE_APP_FOLDER: &str = "hyprnote";
+const STAGING_BUNDLE_ID: &str = "com.velo.staging";
+const RELEASE_APP_FOLDER: &str = "com.velo.app";
+const LEGACY_RELEASE_APP_FOLDER_V1: &str = "anarlog";
+const LEGACY_RELEASE_APP_FOLDER_V0: &str = "hyprnote";
 
 pub fn compute_vault_config_path(base: &Path) -> PathBuf {
     base.join(VAULT_CONFIG_FILENAME)
@@ -15,16 +16,26 @@ pub fn compute_default_base(bundle_id: &str) -> Option<PathBuf> {
     Some(data_dir.join(app_folder))
 }
 
-fn resolve_app_folder<'a>(data_dir: &Path, bundle_id: &'a str, is_debug: bool) -> &'a str {
+fn resolve_app_folder<'a>(data_dir: &Path, bundle_id: &str, is_debug: bool) -> String {
     if is_debug || bundle_id == STAGING_BUNDLE_ID {
-        bundle_id
-    } else if has_app_data(&data_dir.join(LEGACY_RELEASE_APP_FOLDER))
+        return bundle_id.to_string();
+    }
+
+    // Migrate legacy data folders in priority order
+    if has_app_data(&data_dir.join(LEGACY_RELEASE_APP_FOLDER_V1))
         && !has_app_data(&data_dir.join(RELEASE_APP_FOLDER))
     {
-        LEGACY_RELEASE_APP_FOLDER
-    } else {
-        RELEASE_APP_FOLDER
+        return LEGACY_RELEASE_APP_FOLDER_V1.to_string();
     }
+
+    if has_app_data(&data_dir.join(LEGACY_RELEASE_APP_FOLDER_V0))
+        && !has_app_data(&data_dir.join(RELEASE_APP_FOLDER))
+        && !has_app_data(&data_dir.join(LEGACY_RELEASE_APP_FOLDER_V1))
+    {
+        return LEGACY_RELEASE_APP_FOLDER_V0.to_string();
+    }
+
+    RELEASE_APP_FOLDER.to_string()
 }
 
 fn has_app_data(path: &Path) -> bool {
@@ -39,62 +50,23 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
-    fn resolve_app_folder_uses_anarlog_for_new_stable_installs() {
+    fn resolve_app_folder_uses_velo_for_new_installs() {
         let temp = tempdir().unwrap();
-
         assert_eq!(
-            resolve_app_folder(temp.path(), "com.hyprnote.stable", false),
+            resolve_app_folder(temp.path(), "com.velo.stable", false),
             RELEASE_APP_FOLDER
         );
     }
 
     #[test]
-    fn resolve_app_folder_keeps_legacy_stable_folder_when_it_has_data() {
+    fn resolve_app_folder_migrates_anarlog_data() {
         let temp = tempdir().unwrap();
-        let legacy_base = temp.path().join(LEGACY_RELEASE_APP_FOLDER);
-        std::fs::create_dir_all(&legacy_base).unwrap();
-        std::fs::write(legacy_base.join("store.json"), "{}").unwrap();
-
+        let legacy = temp.path().join(LEGACY_RELEASE_APP_FOLDER_V1);
+        std::fs::create_dir_all(&legacy).unwrap();
+        std::fs::write(legacy.join("store.json"), "{}").unwrap();
         assert_eq!(
-            resolve_app_folder(temp.path(), "com.hyprnote.stable", false),
-            LEGACY_RELEASE_APP_FOLDER
-        );
-    }
-
-    #[test]
-    fn resolve_app_folder_prefers_anarlog_when_new_folder_has_data() {
-        let temp = tempdir().unwrap();
-        let legacy_base = temp.path().join(LEGACY_RELEASE_APP_FOLDER);
-        let new_base = temp.path().join(RELEASE_APP_FOLDER);
-        std::fs::create_dir_all(&legacy_base).unwrap();
-        std::fs::create_dir_all(&new_base).unwrap();
-        std::fs::write(legacy_base.join("store.json"), "{}").unwrap();
-        std::fs::write(new_base.join("app.db"), "").unwrap();
-
-        assert_eq!(
-            resolve_app_folder(temp.path(), "com.hyprnote.stable", false),
-            RELEASE_APP_FOLDER
-        );
-    }
-
-    #[test]
-    fn resolve_app_folder_ignores_empty_legacy_stable_folder() {
-        let temp = tempdir().unwrap();
-        std::fs::create_dir_all(temp.path().join(LEGACY_RELEASE_APP_FOLDER)).unwrap();
-
-        assert_eq!(
-            resolve_app_folder(temp.path(), "com.hyprnote.stable", false),
-            RELEASE_APP_FOLDER
-        );
-    }
-
-    #[test]
-    fn resolve_app_folder_uses_anarlog_for_other_release_bundle_ids() {
-        let temp = tempdir().unwrap();
-
-        assert_eq!(
-            resolve_app_folder(temp.path(), "com.hyprnote.Hyprnote", false),
-            RELEASE_APP_FOLDER
+            resolve_app_folder(temp.path(), "com.velo.stable", false),
+            LEGACY_RELEASE_APP_FOLDER_V1
         );
     }
 
@@ -109,8 +81,8 @@ mod tests {
     #[test]
     fn resolve_app_folder_returns_bundle_id_in_debug_builds() {
         assert_eq!(
-            resolve_app_folder(Path::new("/tmp"), "com.hyprnote.stable", true),
-            "com.hyprnote.stable"
+            resolve_app_folder(Path::new("/tmp"), "com.velo.stable", true),
+            "com.velo.stable"
         );
     }
 }

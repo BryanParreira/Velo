@@ -54,12 +54,12 @@ type ProviderConfig = {
   };
 };
 
-const ANARLOG_ICON_SRC = "/assets/anarlog-icon.png";
+const VELO_ICON_SRC = "/assets/anarlog-icon.png";
 
 export function VeloProviderIcon() {
   return (
     <img
-      src={ANARLOG_ICON_SRC}
+      src={VELO_ICON_SRC}
       alt="Velo"
       data-slot="provider-logo"
       className="size-4 object-contain object-center [clip-path:inset(6%_round_18%)]"
