@@ -50,8 +50,7 @@ pub async fn main() {
         let dsn = option_env!("SENTRY_DSN");
 
         if let Some(dsn) = dsn {
-            let release =
-                option_env!("APP_VERSION").map(|v| format!("velo-desktop@{}", v).into());
+            let release = option_env!("APP_VERSION").map(|v| format!("velo-desktop@{}", v).into());
 
             let client = sentry::init((
                 dsn,

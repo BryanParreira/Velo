@@ -20,10 +20,7 @@ import { useMountEffect } from "~/shared/hooks/useMountEffect";
 import { useDevtoolsToastPreview } from "~/store/zustand/devtools-toast-preview";
 import { useTabs } from "~/store/zustand/tabs";
 import { useToastAction } from "~/store/zustand/toast-action";
-import {
-  isConfiguredSttModel,
-  isHyprnoteCloudSttModel,
-} from "~/stt/capabilities";
+import { isConfiguredSttModel } from "~/stt/capabilities";
 
 type ToastAreaPlacement = "default" | "left-sidebar";
 type ToastAreaPosition = {
@@ -61,8 +58,6 @@ export function ToastArea({
     isLocalSttModel,
   } = useNotifications();
 
-  const isAuthenticated = !!auth?.session;
-  const isAuthLoading = auth.session === undefined;
   const {
     current_llm_provider,
     current_llm_model,
@@ -79,12 +74,6 @@ export function ToastArea({
     current_stt_provider,
     current_stt_model,
   );
-  const hasProSttConfigured = isHyprnoteCloudSttModel(
-    current_stt_provider,
-    current_stt_model,
-  );
-  const hasProLlmConfigured = current_llm_provider === "velo";
-
   const currentTab = useTabs((state) => state.currentTab);
   const devtoolsPreview = useDevtoolsToastPreview((state) => state.preview);
   const clearDevtoolsPreview = useDevtoolsToastPreview(
@@ -131,12 +120,8 @@ export function ToastArea({
   const registry = useMemo(
     () =>
       createToastRegistry({
-        isAuthenticated,
-        isAuthLoading,
         hasLLMConfigured,
         hasSttConfigured,
-        hasProSttConfigured,
-        hasProLlmConfigured,
         isAiTranscriptionTabActive,
         isAiIntelligenceTabActive,
         hasActiveDownload,
@@ -145,17 +130,12 @@ export function ToastArea({
         activeDownloads,
         localSttStatus,
         isLocalSttModel,
-        onSignIn: handleSignIn,
         onOpenLLMSettings: handleOpenLLMSettings,
         onOpenSTTSettings: handleOpenSTTSettings,
       }),
     [
-      isAuthenticated,
-      isAuthLoading,
       hasLLMConfigured,
       hasSttConfigured,
-      hasProSttConfigured,
-      hasProLlmConfigured,
       isAiTranscriptionTabActive,
       isAiIntelligenceTabActive,
       hasActiveDownload,
@@ -164,7 +144,6 @@ export function ToastArea({
       activeDownloads,
       localSttStatus,
       isLocalSttModel,
-      handleSignIn,
       handleOpenLLMSettings,
       handleOpenSTTSettings,
     ],
