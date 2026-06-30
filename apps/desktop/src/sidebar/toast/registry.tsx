@@ -4,20 +4,14 @@ import type { DownloadProgress, ToastCondition, ToastType } from "./types";
 
 import type { DevtoolsToastPreview } from "~/store/zustand/devtools-toast-preview";
 
-const VELO_ICON_SRC = "/assets/anarlog-icon.png";
-
 type ToastRegistryEntry = {
   toast: ToastType;
   condition: ToastCondition;
 };
 
 type ToastRegistryParams = {
-  isAuthenticated: boolean;
-  isAuthLoading: boolean;
   hasLLMConfigured: boolean;
   hasSttConfigured: boolean;
-  hasProSttConfigured: boolean;
-  hasProLlmConfigured: boolean;
   isAiTranscriptionTabActive: boolean;
   isAiIntelligenceTabActive: boolean;
   hasActiveDownload: boolean;
@@ -26,7 +20,6 @@ type ToastRegistryParams = {
   activeDownloads: DownloadProgress[];
   localSttStatus: ServerStatus | null;
   isLocalSttModel: boolean;
-  onSignIn: () => void | Promise<void>;
   onOpenLLMSettings: () => void;
   onOpenSTTSettings: () => void;
 };
@@ -39,12 +32,8 @@ type DevtoolsToastPreviewParams = {
 };
 
 export function createToastRegistry({
-  isAuthenticated,
-  isAuthLoading,
   hasLLMConfigured,
   hasSttConfigured,
-  hasProSttConfigured,
-  hasProLlmConfigured,
   isAiTranscriptionTabActive,
   isAiIntelligenceTabActive,
   hasActiveDownload,
@@ -53,7 +42,6 @@ export function createToastRegistry({
   activeDownloads,
   localSttStatus,
   isLocalSttModel,
-  onSignIn,
   onOpenLLMSettings,
   onOpenSTTSettings,
 }: ToastRegistryParams): ToastRegistryEntry[] {
@@ -125,48 +113,6 @@ export function createToastRegistry({
       },
       condition: () =>
         hasSttConfigured && !hasLLMConfigured && !isAiIntelligenceTabActive,
-    },
-    {
-      toast: {
-        id: "pro-requires-login",
-        icon: (
-          <img
-            src={VELO_ICON_SRC}
-            alt="Velo Pro"
-            className="size-5 object-contain object-center"
-          />
-        ),
-        description: "Sign in required",
-        primaryAction: {
-          label: "Sign in",
-          onClick: onSignIn,
-        },
-        dismissible: true,
-      },
-      // suppress until auth resolves to avoid flash on startup
-      condition: () =>
-        !isAuthLoading &&
-        !isAuthenticated &&
-        (hasProSttConfigured || hasProLlmConfigured),
-    },
-    {
-      toast: {
-        id: "upgrade-to-pro",
-        description: "Pro features available",
-        primaryAction: {
-          label: "Upgrade",
-          onClick: onSignIn,
-        },
-        dismissible: true,
-      },
-      // suppress until auth resolves to avoid flash on startup
-      condition: () =>
-        !isAuthLoading &&
-        !isAuthenticated &&
-        hasLLMConfigured &&
-        hasSttConfigured &&
-        !hasProSttConfigured &&
-        !hasProLlmConfigured,
     },
   ];
 }

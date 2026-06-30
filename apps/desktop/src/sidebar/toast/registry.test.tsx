@@ -7,12 +7,8 @@ import {
 } from "./registry";
 
 const baseParams = {
-  isAuthenticated: true,
-  isAuthLoading: false,
   hasLLMConfigured: true,
   hasSttConfigured: true,
-  hasProSttConfigured: false,
-  hasProLlmConfigured: false,
   isAiTranscriptionTabActive: false,
   isAiIntelligenceTabActive: false,
   hasActiveDownload: false,
@@ -21,7 +17,6 @@ const baseParams = {
   activeDownloads: [],
   localSttStatus: null,
   isLocalSttModel: false,
-  onSignIn: vi.fn(),
   onOpenLLMSettings: vi.fn(),
   onOpenSTTSettings: vi.fn(),
 };
@@ -53,27 +48,6 @@ describe("sidebar toast registry", () => {
     expect(toast?.id).toBe("missing-stt");
     expect(toast?.description).toBe("Transcription model needed");
     expect(toast?.primaryAction?.label).toBe("Add");
-  });
-
-  it("renders the pro upgrade toast without an icon", () => {
-    const toast = getToastToShow(
-      createToastRegistry({
-        ...baseParams,
-        isAuthenticated: false,
-      }),
-      () => false,
-    );
-    const previewToast = createDevtoolsToastPreview({
-      preview: "pro",
-      onSignIn: vi.fn(),
-      onOpenLLMSettings: vi.fn(),
-      onOpenSTTSettings: vi.fn(),
-    });
-
-    expect(toast?.id).toBe("upgrade-to-pro");
-    expect(toast?.description).toBe("Pro features available");
-    expect(toast?.icon).toBeUndefined();
-    expect(previewToast.icon).toBeUndefined();
   });
 
   it("creates devtools previews with app toast content", () => {
