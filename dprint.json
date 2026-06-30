@@ -16,6 +16,7 @@
   "excludes": [
     ".venv",
     ".drizzle",
+    ".github/**",
     "**/*-lock.yaml",
     "**/*-lock.json",
     "**/locales",
