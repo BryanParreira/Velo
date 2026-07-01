@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git rebase *)",
+      "Bash(git rm *)",
+      "Bash(mv .claude/settings.json /tmp/settings.json.bak 2>/dev/null; git status --short; git rebase --continue 2>&1 | head -30)",
+      "Bash(git commit *)"
+    ],
+    "additionalDirectories": [
+      "/Volumes/Davoid/Coding/Projects/Velo/.claude"
+    ]
+  }
+}
