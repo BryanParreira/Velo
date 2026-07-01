@@ -1,13 +1,17 @@
-import { useCallback, useRef } from "react";
+import { useRouteContext } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef } from "react";
 
+import { useLanguageModel, useLLMConnection } from "~/ai/hooks";
 import { useAuth } from "~/auth";
 import { useSessionTab } from "~/chat/components/use-session-tab";
 import { buildChatTools } from "~/chat/tools";
 import { useRegisterTools } from "~/contexts/tool";
 import { useSearchEngine } from "~/search/contexts/engine";
+import { initEnhancerService } from "~/services/enhancer";
 import { getSessionEvent } from "~/session/utils";
 import { useDesktopTabLifecycle } from "~/shared/desktop-tab-lifecycle";
 import * as main from "~/store/tinybase/store/main";
+import * as settings from "~/store/tinybase/store/settings";
 import { useTabs } from "~/store/zustand/tabs";
 
 export function useClassicMainLifecycle() {
@@ -30,9 +34,57 @@ export function useClassicMainLifecycle() {
 export function ClassicMainServices() {
   return (
     <>
+      <EnhancerInit />
       <ToolRegistration />
     </>
   );
+}
+
+function EnhancerInit() {
+  const { aiTaskStore } = useRouteContext({ from: "__root__" });
+  const store = main.UI.useStore(main.STORE_ID);
+  const indexes = main.UI.useIndexes(main.STORE_ID);
+  const model = useLanguageModel("enhance");
+  const { conn } = useLLMConnection();
+  const selectedTemplateId = settings.UI.useValue(
+    "selected_template_id",
+    settings.STORE_ID,
+  ) as string | undefined;
+
+  const modelRef = useRef(model);
+  modelRef.current = model;
+  const connRef = useRef(conn);
+  connRef.current = conn;
+  const templateIdRef = useRef(selectedTemplateId);
+  templateIdRef.current = selectedTemplateId;
+
+  useEffect(() => {
+    if (!store || !indexes || !aiTaskStore) {
+      return;
+    }
+
+    const service = initEnhancerService({
+      mainStore: store as main.Store,
+      indexes: {
+        getSliceRowIds: (indexId, sliceId) =>
+          indexes.getSliceRowIds(indexId, sliceId),
+      },
+      aiTaskStore,
+      getModel: () => modelRef.current,
+      getLLMConn: () =>
+        connRef.current
+          ? {
+              providerId: connRef.current.providerId,
+              modelId: connRef.current.modelId,
+            }
+          : null,
+      getSelectedTemplateId: () => templateIdRef.current,
+    });
+
+    return () => service.dispose();
+  }, [store, indexes, aiTaskStore]);
+
+  return null;
 }
 
 function ToolRegistration() {
