@@ -2,7 +2,6 @@ import { useCallback } from "react";
 
 import type { TranscriptionParams } from "@hypr/plugin-transcription";
 import type { TranscriptStorage } from "@hypr/store";
-import { sonnerToast } from "@hypr/ui/components/ui/toast";
 
 import { useListener } from "./contexts";
 import { useKeywords } from "./useKeywords";
@@ -126,17 +125,6 @@ async function canUseBatchTarget(
   return isSupportedLanguagesBatch(provider, model, languages);
 }
 
-function selectedProviderLabel(
-  conn: { provider: string; model: string } | null,
-  modelOverride?: string,
-) {
-  if (!conn) {
-    return "the selected speech-to-text provider";
-  }
-
-  return modelOverride ?? conn.model ?? conn.provider;
-}
-
 function sameBatchTarget(
   a: Pick<BatchTarget, "provider" | "model"> | null,
   b: Pick<BatchTarget, "provider" | "model">,
@@ -249,16 +237,6 @@ export const useRunBatch = (sessionId: string) => {
       const target = shouldUseSelectedTarget
         ? (selectedTarget ?? fallbackTarget)
         : fallbackTarget;
-
-      if (!shouldUseSelectedTarget) {
-        sonnerToast.message("Using a batch transcription provider", {
-          description: `${
-            selectedTarget
-              ? selectedProviderLabel(conn, selectedModel)
-              : selectedProviderLabel(conn)
-          } is not available for batch transcription. Using ${target.label} instead.`,
-        });
-      }
 
       const createdAt = new Date().toISOString();
       const memoMd = store.getCell("sessions", sessionId, "raw_md");

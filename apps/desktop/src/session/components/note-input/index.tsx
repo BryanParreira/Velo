@@ -1,3 +1,4 @@
+import { Sparkles } from "lucide-react";
 import type { EditorView } from "prosemirror-view";
 import {
   forwardRef,
@@ -25,6 +26,7 @@ import { Transcript } from "./transcript";
 import { useCaretNearBottom } from "~/session/components/caret-position-context";
 import { useCurrentNoteTab } from "~/session/components/shared";
 import { useScrollPreservation } from "~/shared/hooks/useScrollPreservation";
+import * as main from "~/store/tinybase/store/main";
 import type { SessionMode } from "~/store/zustand/listener/general";
 import { type Tab, useTabs } from "~/store/zustand/tabs";
 import { type EditorView as TabEditorView } from "~/store/zustand/tabs/schema";
@@ -241,13 +243,20 @@ export const NoteInput = forwardRef<
               />
             )}
             {renderedCurrentTab.type === "raw" && (
-              <RawEditor
-                ref={internalEditorRef}
-                sessionId={sessionId}
-                onNavigateToTitle={onNavigateToTitle}
-                onViewReady={handleViewReady}
-                onViewDisposed={handleViewDisposed}
-              />
+              <>
+                <RawEditor
+                  ref={internalEditorRef}
+                  sessionId={sessionId}
+                  onNavigateToTitle={onNavigateToTitle}
+                  onViewReady={handleViewReady}
+                  onViewDisposed={handleViewDisposed}
+                />
+                <SummaryReadyHint
+                  sessionId={sessionId}
+                  editorTabs={editorTabs}
+                  onSwitchToSummary={handleTabChange}
+                />
+              </>
             )}
             {renderedCurrentTab.type === "transcript" && (
               <Transcript sessionId={sessionId} scrollRef={scrollRef} />
@@ -261,6 +270,74 @@ export const NoteInput = forwardRef<
     );
   },
 );
+
+function SummaryReadyHint({
+  sessionId,
+  editorTabs,
+  onSwitchToSummary,
+}: {
+  sessionId: string;
+  editorTabs: TabEditorView[];
+  onSwitchToSummary: (tab: TabEditorView) => void;
+}) {
+  const rawMd = main.UI.useCell("sessions", sessionId, "raw_md", main.STORE_ID);
+  const enhancedNoteIds = main.UI.useSliceRowIds(
+    main.INDEXES.enhancedNotesBySession,
+    sessionId,
+    main.STORE_ID,
+  );
+  const firstEnhancedNoteId = enhancedNoteIds?.[0];
+  const enhancedContent = main.UI.useCell(
+    "enhanced_notes",
+    firstEnhancedNoteId ?? "",
+    "content",
+    main.STORE_ID,
+  );
+
+  const summaryTab = editorTabs.find(
+    (t): t is Extract<TabEditorView, { type: "enhanced" }> =>
+      t.type === "enhanced",
+  );
+
+  const hasSummary =
+    summaryTab &&
+    typeof enhancedContent === "string" &&
+    enhancedContent.trim().length > 0;
+
+  const rawIsEmpty =
+    !rawMd ||
+    (typeof rawMd === "string" &&
+      (() => {
+        try {
+          const parsed = JSON.parse(rawMd);
+          const textNodes = parsed?.content?.filter(
+            (n: { type: string }) => n.type !== "heading",
+          );
+          return !textNodes?.some((n: { content?: { text?: string }[] }) =>
+            n.content?.some((c) => c.text?.trim()),
+          );
+        } catch {
+          return rawMd.trim().length === 0;
+        }
+      })());
+
+  if (!hasSummary || !rawIsEmpty) {
+    return null;
+  }
+
+  return (
+    <button
+      onClick={() => onSwitchToSummary(summaryTab)}
+      className="mt-4 flex w-full items-center gap-2 rounded-lg border border-dashed border-neutral-200 px-3 py-2.5 text-left transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+    >
+      <Sparkles className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+      <span className="text-xs text-neutral-400">
+        AI summary is ready —{" "}
+        <span className="font-medium text-neutral-500">view Summary</span>
+      </span>
+    </button>
+  );
+}
 
 function isSameEditorView(left: TabEditorView, right: TabEditorView): boolean {
   if (left.type !== right.type) {
