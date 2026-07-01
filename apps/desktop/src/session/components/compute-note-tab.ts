@@ -6,36 +6,31 @@ export function computeCurrentNoteTab(
   firstEnhancedNoteId: string | undefined,
   canShowTranscript = false,
 ): EditorView {
+  const enhancedFallback: EditorView = firstEnhancedNoteId
+    ? { type: "enhanced", id: firstEnhancedNoteId }
+    : canShowTranscript
+      ? { type: "transcript" }
+      : { type: "enhanced", id: "" };
+
   if (isLiveSessionActive) {
-    if (tabView?.type === "raw") {
+    if (tabView?.type === "enhanced" && firstEnhancedNoteId) {
       return tabView;
     }
     if (tabView?.type === "transcript" && canShowTranscript) {
       return tabView;
     }
-    if (tabView?.type === "enhanced" && firstEnhancedNoteId) {
-      return tabView;
-    }
-    return { type: "raw" };
+    return enhancedFallback;
   }
 
   if (tabView) {
-    if (tabView.type === "raw") {
-      return tabView;
-    }
     if (tabView.type === "enhanced" && firstEnhancedNoteId) {
       return tabView;
     }
     if (tabView.type === "transcript" && canShowTranscript) {
       return tabView;
     }
-
-    return { type: "raw" };
+    return enhancedFallback;
   }
 
-  if (firstEnhancedNoteId) {
-    return { type: "enhanced", id: firstEnhancedNoteId };
-  }
-
-  return { type: "raw" };
+  return enhancedFallback;
 }
