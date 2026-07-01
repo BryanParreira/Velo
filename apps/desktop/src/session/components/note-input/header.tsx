@@ -1323,7 +1323,6 @@ function createEditorTabs({
   return [
     ...enhancedTabs,
     ...(canShowInsights ? [{ type: "insights" } as const] : []),
-    { type: "raw" },
     ...(canShowTranscript ? [{ type: "transcript" } as const] : []),
   ];
 }
