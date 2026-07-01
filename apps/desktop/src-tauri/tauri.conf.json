@@ -50,7 +50,7 @@
         "background": "assets/dmg-background-stable.png",
         "windowSize": {
           "width": 660,
-          "height": 430
+          "height": 400
         },
         "appPosition": {
           "x": 177,
