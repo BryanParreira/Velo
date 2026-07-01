@@ -10,12 +10,12 @@ pub struct TrayVersion;
 impl TrayVersion {
     fn get_channel(identifier: &str, app_name: &str) -> &'static str {
         match identifier {
-            "com.hyprnote.stable" | "com.hyprnote.Hyprnote" => "stable",
-            "com.hyprnote.staging" => "staging",
-            "com.hyprnote.dev" => "dev",
+            "com.velo.stable" | "com.velo.app" => "stable",
+            "com.velo.staging" => "staging",
+            "com.velo.dev" => "dev",
             _ => match app_name {
-                "Anarlog" | "Char" | "Hyprnote" => "stable",
-                "Anarlog Staging" | "Char Staging" | "Hyprnote Staging" => "staging",
+                "Velo" => "stable",
+                "Velo Staging" => "staging",
                 _ => "dev",
             },
         }
@@ -46,26 +46,23 @@ mod tests {
     #[test]
     fn gets_channel_from_identifier() {
         assert_eq!(
-            TrayVersion::get_channel("com.hyprnote.stable", "Anarlog"),
+            TrayVersion::get_channel("com.velo.stable", "Velo"),
             "stable"
         );
         assert_eq!(
-            TrayVersion::get_channel("com.hyprnote.staging", "Anarlog Staging"),
+            TrayVersion::get_channel("com.velo.staging", "Velo Staging"),
             "staging"
         );
-        assert_eq!(
-            TrayVersion::get_channel("com.hyprnote.dev", "Anarlog Dev"),
-            "dev"
-        );
+        assert_eq!(TrayVersion::get_channel("com.velo.dev", "Velo Dev"), "dev");
     }
 
     #[test]
     fn falls_back_to_product_name_for_unknown_identifier() {
-        assert_eq!(TrayVersion::get_channel("unknown", "Anarlog"), "stable");
+        assert_eq!(TrayVersion::get_channel("unknown", "Velo"), "stable");
         assert_eq!(
-            TrayVersion::get_channel("unknown", "Anarlog Staging"),
+            TrayVersion::get_channel("unknown", "Velo Staging"),
             "staging"
         );
-        assert_eq!(TrayVersion::get_channel("unknown", "Anarlog Dev"), "dev");
+        assert_eq!(TrayVersion::get_channel("unknown", "Velo Dev"), "dev");
     }
 }
