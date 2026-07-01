@@ -35,10 +35,10 @@ runs:
       run: |
         set -euo pipefail
 
-        DMG_PATH="${{ inputs.dmg-path }}"
+        DMG_PATH=$(ls ${{ inputs.dmg-path }} 2>/dev/null | head -1)
 
-        if [[ ! -f "$DMG_PATH" ]]; then
-          echo "::error::DMG not found at $DMG_PATH"
+        if [[ -z "$DMG_PATH" ]] || [[ ! -f "$DMG_PATH" ]]; then
+          echo "::error::DMG not found at ${{ inputs.dmg-path }}"
           exit 1
         fi
 
