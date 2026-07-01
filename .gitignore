@@ -29,3 +29,5 @@ internal
 # Agent scratch / reference material (not for commit)
 .tmp/
 
+*.dmg
+
