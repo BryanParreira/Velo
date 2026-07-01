@@ -91,7 +91,7 @@ struct FloatingBarView: View {
     VStack(spacing: FloatingBarLayout.clickAreaGap) {
       Button(action: { performClick(RustBridge.openMainWindow) }) {
         CircularClickArea(hoverFill: controlHoverFill) {
-          Text("a")
+          Text("V")
             .font(.custom(FloatingBarFonts.cabinSketchName, size: FloatingBarLayout.markSize))
             .foregroundStyle(primaryContentColor)
             .offset(y: -1)
