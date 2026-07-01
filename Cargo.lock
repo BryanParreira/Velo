@@ -4759,7 +4759,7 @@ dependencies = [
 
 [[package]]
 name = "desktop"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "audio-actual",
  "audio-mock",
