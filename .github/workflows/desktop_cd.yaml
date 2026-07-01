@@ -1,4 +1,3 @@
-# https://docs.crabnebula.dev/cloud/ci/tauri-v2-workflow/
 on:
   workflow_dispatch:
     inputs:
@@ -10,7 +9,7 @@ on:
           - staging
           - stable
       publish:
-        description: "Publish to Crabnebula and create GitHub release (ignored for staging)"
+        description: "Create GitHub release (ignored for staging)"
         type: boolean
         default: true
       version:
@@ -23,7 +22,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.channel }}
   cancel-in-progress: true
 env:
-  CN_APPLICATION: "fastrepl/hyprnote2"
   RELEASE_CHANNEL: ${{ inputs.channel }}
   TAURI_CONF_PATH: ./src-tauri/tauri.conf.${{ inputs.channel }}.json
   NODE_OPTIONS: "--max-old-space-size=4096"
@@ -55,25 +53,8 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Computed version: $VERSION"
 
-  cn-draft:
-    if: ${{ inputs.channel != 'staging' }}
-    needs: compute-version
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: ./scripts/version.sh "./apps/desktop/src-tauri/tauri.conf.json" "${{ needs.compute-version.outputs.version }}"
-      - uses: ./.github/actions/cn_release
-        with:
-          cmd: draft
-          app: ${{ env.CN_APPLICATION }}
-          key: ${{ secrets.CN_API_KEY }}
-          channel: ${{ env.RELEASE_CHANNEL }}
-          framework: tauri
-          working-directory: ./apps/desktop
-
   build-macos:
-    needs: [compute-version, cn-draft]
-    if: ${{ !cancelled() && (needs.cn-draft.result == 'success' || needs.cn-draft.result == 'skipped') }}
+    needs: [compute-version]
     permissions:
       contents: write
     runs-on: depot-macos-26
@@ -168,14 +149,26 @@ jobs:
         shell: bash
         working-directory: ./apps/desktop/src-tauri
       - if: ${{ inputs.channel != 'staging' }}
-        uses: ./.github/actions/cn_release
+        id: find-updater-artifacts
+        shell: bash
+        run: |
+          BUNDLE_DIR="apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/macos"
+          ARCHIVE=$(find "$BUNDLE_DIR" -name "*.app.tar.gz" -type f | head -1)
+          SIG=$(find "$BUNDLE_DIR" -name "*.app.tar.gz.sig" -type f | head -1)
+          if [[ -z "$ARCHIVE" || -z "$SIG" ]]; then
+            echo "::error::Updater archive or signature not found in $BUNDLE_DIR"
+            exit 1
+          fi
+          mkdir -p /tmp/updater-artifacts
+          cp "$ARCHIVE" "/tmp/updater-artifacts/velo-macos-${{ matrix.arch }}.app.tar.gz"
+          cp "$SIG" "/tmp/updater-artifacts/velo-macos-${{ matrix.arch }}.app.tar.gz.sig"
+          cp "${{ steps.find-dmg.outputs.path }}" "/tmp/updater-artifacts/velo-macos-${{ matrix.arch }}.dmg"
+      - if: ${{ inputs.channel != 'staging' }}
+        uses: actions/upload-artifact@v4
         with:
-          cmd: upload
-          app: ${{ env.CN_APPLICATION }}
-          key: ${{ secrets.CN_API_KEY }}
-          channel: ${{ env.RELEASE_CHANNEL }}
-          framework: tauri
-          working-directory: ./apps/desktop
+          name: release-artifacts-${{ matrix.arch }}
+          path: /tmp/updater-artifacts/*
+          retention-days: 3
       - if: ${{ inputs.channel == 'staging' }}
         uses: actions/upload-artifact@v4
         with:
@@ -223,25 +216,9 @@ jobs:
           git tag -f "$TAG" "$TARGET"
           git push origin "refs/tags/$TAG" --force
 
-  cn-publish:
-    if: ${{ inputs.channel != 'staging' && inputs.publish }}
-    needs: [compute-version, build-macos, create-tag]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: ./scripts/version.sh "./apps/desktop/src-tauri/tauri.conf.json" "${{ needs.compute-version.outputs.version }}"
-      - uses: ./.github/actions/cn_release
-        with:
-          cmd: publish
-          app: ${{ env.CN_APPLICATION }}
-          key: ${{ secrets.CN_API_KEY }}
-          channel: ${{ env.RELEASE_CHANNEL }}
-          framework: tauri
-          working-directory: ./apps/desktop
-
   release:
-    if: ${{ inputs.channel != 'staging' && inputs.publish && !cancelled() && needs.cn-publish.result == 'success' && needs.build-macos.result == 'success' }}
-    needs: [compute-version, build-macos, cn-publish]
+    if: ${{ inputs.channel != 'staging' && inputs.publish && !cancelled() && needs.build-macos.result == 'success' && needs.create-tag.result == 'success' }}
+    needs: [compute-version, build-macos, create-tag]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -251,40 +228,46 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
       - run: git fetch --tags --force
-      - if: ${{ needs.build-macos.result == 'success' }}
-        uses: ./.github/actions/cn_download
+      - uses: actions/download-artifact@v4
         with:
-          app: ${{ env.CN_APPLICATION }}
-          version: ${{ needs.compute-version.outputs.version }}
-          channel: ${{ env.RELEASE_CHANNEL }}
-          platform: dmg-aarch64
-          output: hyprnote-macos-aarch64.dmg
-          key: ${{ secrets.CN_API_KEY }}
-      - if: ${{ needs.build-macos.result == 'success' }}
-        uses: ./.github/actions/cn_download
-        with:
-          app: ${{ env.CN_APPLICATION }}
-          version: ${{ needs.compute-version.outputs.version }}
-          channel: ${{ env.RELEASE_CHANNEL }}
-          platform: dmg-x86_64
-          output: hyprnote-macos-x86_64.dmg
-          key: ${{ secrets.CN_API_KEY }}
+          pattern: release-artifacts-*
+          path: dist
+          merge-multiple: true
+      - run: mv dist/velo-macos-aarch64.dmg hyprnote-macos-aarch64.dmg && mv dist/velo-macos-x86_64.dmg hyprnote-macos-x86_64.dmg
       - id: checksums
         uses: ./.github/actions/generate_checksums
         with:
           files: |
-            ${{ needs.build-macos.result == 'success' && 'hyprnote-macos-aarch64.dmg' || '' }}
-            ${{ needs.build-macos.result == 'success' && 'hyprnote-macos-x86_64.dmg' || '' }}
+            hyprnote-macos-aarch64.dmg
+            hyprnote-macos-x86_64.dmg
+      - id: latest-json
+        run: |
+          TAG="desktop_v${{ needs.compute-version.outputs.version }}"
+          BASE_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}"
+          SIG_AARCH64=$(cat dist/velo-macos-aarch64.app.tar.gz.sig)
+          SIG_X86_64=$(cat dist/velo-macos-x86_64.app.tar.gz.sig)
+          PUB_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          jq -n \
+            --arg version "${{ needs.compute-version.outputs.version }}" \
+            --arg pub_date "$PUB_DATE" \
+            --arg notes "https://anarlog.so/changelog/${{ needs.compute-version.outputs.version }}" \
+            --arg aarch64_sig "$SIG_AARCH64" \
+            --arg aarch64_url "${BASE_URL}/velo-macos-aarch64.app.tar.gz" \
+            --arg x86_64_sig "$SIG_X86_64" \
+            --arg x86_64_url "${BASE_URL}/velo-macos-x86_64.app.tar.gz" \
+            '{
+              version: $version,
+              notes: $notes,
+              pub_date: $pub_date,
+              platforms: {
+                "darwin-aarch64": { signature: $aarch64_sig, url: $aarch64_url },
+                "darwin-x86_64": { signature: $x86_64_sig, url: $x86_64_url }
+              }
+            }' > latest.json
       - id: artifacts
         run: |
-          ARTIFACTS=""
-          if [[ "${{ needs.build-macos.result }}" == "success" ]]; then
-            ARTIFACTS="hyprnote-macos-aarch64.dmg,hyprnote-macos-x86_64.dmg"
-          fi
-          if [[ -z "$ARTIFACTS" ]]; then
-            echo "No artifacts to release" >&2
-            exit 1
-          fi
+          ARTIFACTS="hyprnote-macos-aarch64.dmg,hyprnote-macos-x86_64.dmg,dist/velo-macos-aarch64.app.tar.gz,dist/velo-macos-aarch64.app.tar.gz.sig,dist/velo-macos-x86_64.app.tar.gz,dist/velo-macos-x86_64.app.tar.gz.sig,latest.json"
           if [[ -n "${{ steps.checksums.outputs.checksum_files }}" ]]; then
             ARTIFACTS="$ARTIFACTS,${{ steps.checksums.outputs.checksum_files }}"
           fi

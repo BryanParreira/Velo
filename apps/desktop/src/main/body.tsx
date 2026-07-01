@@ -49,8 +49,8 @@ import { type Tab, uniqueIdfromTab, useTabs } from "~/store/zustand/tabs";
 const MAIN_AREA_TOP_DRAG_HEIGHT_PX = 48;
 const MAIN_AREA_WINDOW_DRAG_THRESHOLD_PX = 5;
 const LEFT_SIDEBAR_DEFAULT_WIDTH_PX = 200;
-const LEFT_SIDEBAR_MIN_WIDTH_PX = 200;
-const LEFT_SIDEBAR_MAX_WIDTH_PX = 360;
+const LEFT_SIDEBAR_MIN_WIDTH_PX = 180;
+const LEFT_SIDEBAR_MAX_WIDTH_PX = 480;
 const LEFT_SIDEBAR_FALLBACK_CONTAINER_WIDTH_PX = 1000;
 
 type MainAreaWindowDragStart = {

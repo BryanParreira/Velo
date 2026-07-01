@@ -193,6 +193,7 @@ function TabContentNoteInner({
         <div className="min-h-0 flex-1">
           {contentHydrated ? (
             <NoteInput
+              key={tab.id}
               ref={noteInputRef}
               tab={tab}
               editorTabs={editorTabs}

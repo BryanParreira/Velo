@@ -6,9 +6,6 @@
   "plugins": {
     "deep-link": {
       "desktop": { "schemes": ["velo"] }
-    },
-    "updater": {
-      "active": false
     }
   }
 }
