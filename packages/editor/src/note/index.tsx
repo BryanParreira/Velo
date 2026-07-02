@@ -30,7 +30,6 @@ import {
   useMemo,
   useRef,
 } from "react";
-import { useDebounceCallback } from "usehooks-ts";
 
 import { cn } from "@hypr/utils";
 
@@ -537,14 +536,50 @@ export const NoteEditor = forwardRef<NoteEditorRef, NoteEditorProps>(
       [taskSource, taskStorage],
     );
 
-    const onUpdate = useDebounceCallback((content: JSONContent) => {
-      syncTasks(content);
-      if (!handleChange) {
+    const handleChangeRef = useRef(handleChange);
+    handleChangeRef.current = handleChange;
+    const syncTasksRef = useRef(syncTasks);
+    syncTasksRef.current = syncTasks;
+
+    const pendingUpdateRef = useRef<JSONContent | null>(null);
+    const updateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const flushPendingUpdate = useCallback(() => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+        updateTimerRef.current = null;
+      }
+      const content = pendingUpdateRef.current;
+      if (!content) {
         return;
       }
+      pendingUpdateRef.current = null;
+      syncTasksRef.current(content);
+      handleChangeRef.current?.(content);
+    }, []);
 
-      handleChange(content);
-    }, 500);
+    const onUpdate = useCallback(
+      (content: JSONContent) => {
+        pendingUpdateRef.current = content;
+        if (updateTimerRef.current) {
+          clearTimeout(updateTimerRef.current);
+        }
+        updateTimerRef.current = setTimeout(flushPendingUpdate, 500);
+      },
+      [flushPendingUpdate],
+    );
+
+    // usehooks-ts's useDebounceCallback cancels a *different* debounce
+    // instance than the one it returns, so its unmount cleanup never
+    // actually stops a pending call. Flushing here on unmount both
+    // guarantees the in-flight edit lands on the session it belongs to
+    // and prevents a stale timer from firing after the editor for a new
+    // note has already mounted.
+    useEffect(() => {
+      return () => {
+        flushPendingUpdate();
+      };
+    }, [flushPendingUpdate]);
 
     const plugins = useMemo(
       () => [
