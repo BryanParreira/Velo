@@ -29,6 +29,7 @@ import {
   useImperativeHandle,
   useMemo,
   useRef,
+  useState,
 } from "react";
 
 import { cn } from "@hypr/utils";
@@ -181,13 +182,6 @@ const baseNodeViews = {
     name: "taskItem",
   }),
 };
-
-function isSameContent(
-  left: JSONContent | undefined,
-  right: JSONContent | undefined,
-) {
-  return JSON.stringify(left) === JSON.stringify(right);
-}
 
 function wrapNodeViewComponents(nodeViews?: NodeViewComponents) {
   if (!nodeViews) {
@@ -498,9 +492,6 @@ export const NoteEditor = forwardRef<NoteEditorRef, NoteEditorProps>(
 
       return ensureImageTrailingParagraphs(hydrated);
     }, [normalizedInitialContent, taskSource, taskStorage]);
-    const previousContentRef = useRef<JSONContent | undefined>(
-      reconciledInitialContent,
-    );
     const viewRef = useRef<EditorView | null>(null);
     const commandsRef = useRef<EditorCommands>(noopCommands);
 
@@ -626,12 +617,56 @@ export const NoteEditor = forwardRef<NoteEditorRef, NoteEditorProps>(
       [extraNodeViews],
     );
 
+    // react-prosemirror's EditorView is a special subclass that only
+    // commits state updates driven through its own event/effect cycle
+    // (dispatchTransaction, or its useEditorEffect hook). Calling
+    // view.updateState() imperatively from a plain effect -- which is
+    // what this code used to do -- updates ProseMirror's internal state
+    // but never flushes to the DOM, since it bypasses that commit cycle.
+    // The reliable way to force new content in is a genuine React
+    // remount: renderGeneration is bumped whenever we accept new
+    // content, and used as the ProseMirror subtree's key below.
+    const [renderedContent, setRenderedContent] = useState(
+      reconciledInitialContent,
+    );
+    const [renderGeneration, setRenderGeneration] = useState(0);
+
+    useEffect(() => {
+      if (renderedContent === reconciledInitialContent) return;
+      if (
+        !reconciledInitialContent ||
+        reconciledInitialContent.type !== "doc"
+      ) {
+        return;
+      }
+
+      const view = viewRef.current;
+      const focused = view?.hasFocus() ?? false;
+      if (focused && !syncContentWhenFocused) {
+        if (!view) return;
+        // Content differs but the view is currently focused (e.g. the
+        // session changed while the user was still typing into the old
+        // one). Retry as soon as focus leaves the view.
+        const handleBlur = () => {
+          setRenderedContent(reconciledInitialContent);
+          setRenderGeneration((n) => n + 1);
+        };
+        view.dom.addEventListener("blur", handleBlur);
+        return () => {
+          view.dom.removeEventListener("blur", handleBlur);
+        };
+      }
+
+      setRenderedContent(reconciledInitialContent);
+      setRenderGeneration((n) => n + 1);
+    }, [reconciledInitialContent, syncContentWhenFocused]);
+
     const defaultState = useMemo(() => {
       let doc: PMNode;
       try {
         doc =
-          reconciledInitialContent && reconciledInitialContent.type === "doc"
-            ? PMNode.fromJSON(schema, reconciledInitialContent)
+          renderedContent && renderedContent.type === "doc"
+            ? PMNode.fromJSON(schema, renderedContent)
             : schema.node("doc", null, [schema.node("paragraph")]);
         if (enforceTitleHeading) {
           doc = normalizeTitleHeadingDoc(doc);
@@ -644,46 +679,7 @@ export const NoteEditor = forwardRef<NoteEditorRef, NoteEditorProps>(
         ]);
       }
       return EditorState.create({ doc, plugins });
-    }, [reconciledInitialContent, plugins, enforceTitleHeading]);
-
-    useEffect(() => {
-      const view = viewRef.current;
-      if (!view) return;
-      if (previousContentRef.current === reconciledInitialContent) return;
-
-      if (
-        !reconciledInitialContent ||
-        reconciledInitialContent.type !== "doc"
-      ) {
-        return;
-      }
-
-      const currentContent = view.state.doc.toJSON() as JSONContent;
-      if (isSameContent(currentContent, reconciledInitialContent)) {
-        previousContentRef.current = reconciledInitialContent;
-        return;
-      }
-
-      if (view.hasFocus() && !syncContentWhenFocused) {
-        previousContentRef.current = reconciledInitialContent;
-        return;
-      }
-
-      try {
-        let doc = PMNode.fromJSON(schema, reconciledInitialContent);
-        if (enforceTitleHeading) {
-          doc = normalizeTitleHeadingDoc(doc);
-        }
-        const state = EditorState.create({
-          doc,
-          plugins: view.state.plugins,
-        });
-        view.updateState(state);
-        previousContentRef.current = reconciledInitialContent;
-      } catch {
-        // invalid content
-      }
-    }, [reconciledInitialContent, syncContentWhenFocused, enforceTitleHeading]);
+    }, [renderedContent, plugins, enforceTitleHeading]);
 
     const onViewReady = useCallback(
       (view: EditorView) => {
@@ -702,6 +698,7 @@ export const NoteEditor = forwardRef<NoteEditorRef, NoteEditorProps>(
             }
           >
             <ProseMirror
+              key={renderGeneration}
               defaultState={defaultState}
               nodeViewComponents={nodeViews}
               dispatchTransaction={function (
