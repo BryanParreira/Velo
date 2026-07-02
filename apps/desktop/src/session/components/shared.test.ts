@@ -296,5 +296,27 @@ describe("computeCurrentNoteTab", () => {
       const result = computeCurrentNoteTab(null, false, undefined);
       expect(result).toEqual({ type: "raw" });
     });
+
+    it("scopes the empty-note fallback id to the session so two empty sessions never collide", () => {
+      const sessionA = computeCurrentNoteTab(
+        null,
+        false,
+        undefined,
+        false,
+        "session-a",
+      );
+      const sessionB = computeCurrentNoteTab(
+        null,
+        false,
+        undefined,
+        false,
+        "session-b",
+      );
+      expect(sessionA).toEqual({ type: "enhanced", id: "draft-session-a" });
+      expect(sessionB).toEqual({ type: "enhanced", id: "draft-session-b" });
+      expect(sessionA.type === "enhanced" && sessionA.id).not.toEqual(
+        sessionB.type === "enhanced" && sessionB.id,
+      );
+    });
   });
 });

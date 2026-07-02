@@ -99,9 +99,11 @@ export function useCurrentNoteTab(
       isLiveSessionActive,
       firstEnhancedNoteId,
       canShowTranscript,
+      tab.id,
     );
   }, [
     tab.state.view,
+    tab.id,
     isLiveSessionActive,
     firstEnhancedNoteId,
     canShowTranscript,
