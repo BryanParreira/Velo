@@ -536,12 +536,7 @@ export const NoteEditor = forwardRef<NoteEditorRef, NoteEditorProps>(
       [taskSource, taskStorage],
     );
 
-    const handleChangeRef = useRef(handleChange);
-    handleChangeRef.current = handleChange;
-    const syncTasksRef = useRef(syncTasks);
-    syncTasksRef.current = syncTasks;
-
-    const pendingUpdateRef = useRef<JSONContent | null>(null);
+    const pendingFlushRef = useRef<(() => void) | null>(null);
     const updateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const flushPendingUpdate = useCallback(() => {
@@ -549,37 +544,44 @@ export const NoteEditor = forwardRef<NoteEditorRef, NoteEditorProps>(
         clearTimeout(updateTimerRef.current);
         updateTimerRef.current = null;
       }
-      const content = pendingUpdateRef.current;
-      if (!content) {
+      const flush = pendingFlushRef.current;
+      if (!flush) {
         return;
       }
-      pendingUpdateRef.current = null;
-      syncTasksRef.current(content);
-      handleChangeRef.current?.(content);
+      pendingFlushRef.current = null;
+      flush();
     }, []);
 
+    // Bind syncTasks/handleChange by value at the moment each edit happens,
+    // not via a ref that tracks whatever the latest render's props are. If
+    // this component doesn't remount between sessions (props update instead
+    // of a fresh mount), a ref would flush a pending edit through the *new*
+    // session's handleChange, writing stale content into the wrong note.
     const onUpdate = useCallback(
       (content: JSONContent) => {
-        pendingUpdateRef.current = content;
+        pendingFlushRef.current = () => {
+          syncTasks(content);
+          handleChange?.(content);
+        };
         if (updateTimerRef.current) {
           clearTimeout(updateTimerRef.current);
         }
         updateTimerRef.current = setTimeout(flushPendingUpdate, 500);
       },
-      [flushPendingUpdate],
+      [flushPendingUpdate, syncTasks, handleChange],
     );
 
     // usehooks-ts's useDebounceCallback cancels a *different* debounce
     // instance than the one it returns, so its unmount cleanup never
-    // actually stops a pending call. Flushing here on unmount both
-    // guarantees the in-flight edit lands on the session it belongs to
-    // and prevents a stale timer from firing after the editor for a new
-    // note has already mounted.
+    // actually stops a pending call. Flushing here on unmount (and
+    // whenever the bound callbacks change, i.e. the session changed)
+    // guarantees an in-flight edit lands on the session it was typed
+    // into instead of leaking into whichever session mounts/renders next.
     useEffect(() => {
       return () => {
         flushPendingUpdate();
       };
-    }, [flushPendingUpdate]);
+    }, [flushPendingUpdate, onUpdate]);
 
     const plugins = useMemo(
       () => [
